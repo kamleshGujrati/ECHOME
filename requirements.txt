@@ -77,6 +77,5 @@ charset-normalizer==3.3.2
 
 setuptools
 wheel
-cython==0.29.40
 
 
