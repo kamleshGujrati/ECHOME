@@ -165,7 +165,7 @@ def setup():
 
     print("[✅] Setup completed. Now run: ./setup_systemd.py start")
 
-def start():n
+def start():
     print("[*] Starting services...")
     start_services()
     print("[✅] Services started.")
