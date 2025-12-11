@@ -19,10 +19,19 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-default-key")
 
 # Debug mode
 # DEBUG = os.getenv("DEBUG", "False") == "True"
-DEBUG = True
+DEBUG = False
 
 # Allowed hosts
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS")
+
+ALLOWED_HOSTS = [
+    "echome.work.gd",
+    "www.echome.work.gd",
+    "13.203.229.52",
+    "127.0.0.1",
+    "localhost",
+]
+
 
 # -----------------------------------------
 # BLOCKCHAIN CONFIG
@@ -284,11 +293,11 @@ SESSION_TTL_SECONDS = 7 * 24 * 3600  # 7 days
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
 
-CELERY_ACCEPT_CONTENT = ['pickle', 'json']
-CELERY_TASK_SERIALIZER = 'pickle'
-CELERY_RESULT_SERIALIZER = 'pickle'
+CELERY_ACCEPT_CONTENT = [ 'json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 
 REDIS_URL = os.getenv("REDIS_URL")
 
-CELERY_BROKER_URL = f"{REDIS_URL}/0?ssl_cert_reqs=CERT_NONE"
-CELERY_RESULT_BACKEND = f"{REDIS_URL}/0?ssl_cert_reqs=CERT_NONE"
+CELERY_BROKER_URL = f"{REDIS_URL}"
+CELERY_RESULT_BACKEND = f"{REDIS_URL}"

@@ -1,102 +1,215 @@
 #!/usr/bin/env python3
-import os
+import sys
 import subprocess
-import getpass
 from pathlib import Path
 
-PROJECT_NAME = "echome"
-APP_MODULE = "ECHOME"
-BASE_DIR = Path(__file__).resolve().parent
-VENV_PATH = BASE_DIR / ".venv"
-USER = getpass.getuser()
+# -------------------------------
+# AUTO DETECT PROJECT PATHS
+# -------------------------------
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+VENV_PATH = PROJECT_ROOT / ".venv" / "bin"
+PYTHON_PATH = VENV_PATH / "python"
+GUNICORN_PATH = VENV_PATH / "gunicorn"
+
+
+
+# -------------------------------
+# AUTO DETECT DJANGO MODULE
+# -------------------------------
+
+def detect_django_module():
+    for item in PROJECT_ROOT.iterdir():
+        if item.is_dir() and (item / "settings.py").exists():
+            return item.name
+    raise RuntimeError("❌ Could not detect Django module (settings.py not found).")
+
+DJANGO_MODULE = detect_django_module()
+WSGI_MODULE = f"{DJANGO_MODULE}.wsgi:application"
+
+print(f"[+] Django module detected as: {DJANGO_MODULE}")
+print(f"[+] Using Linux user: ubuntu")
+
+# -------------------------------
+# SYSTEMD SERVICE FILES
+# -------------------------------
 
 GUNICORN_SERVICE = f"""
 [Unit]
-Description=ECHOME Gunicorn Service
+Description=Gunicorn Service for Django
 After=network.target
 
 [Service]
-User={USER}
+User=ubuntu
 Group=www-data
-WorkingDirectory={BASE_DIR}
-ExecStart={VENV_PATH}/bin/gunicorn \
-    --workers 3 \
-    --bind unix:{BASE_DIR}/echome.sock \
-    {APP_MODULE}.wsgi:application
+WorkingDirectory={PROJECT_ROOT}
+Environment="PATH={VENV_PATH}"
+ExecStart={GUNICORN_PATH} \\
+  --workers 4 \\
+  --threads 2 \\
+  --preload \\
+  --timeout 120 \\
+  --bind unix:/run/gunicorn/gunicorn.sock \
+  {WSGI_MODULE}
+
 Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
 """
 
-CELERY_WORKER_SERVICE = f"""
+WORKER_SERVICE = f"""
 [Unit]
-Description=ECHOME Celery Worker
-After=network.target redis.service
+Description=Celery Worker
+After=network.target
 
 [Service]
-User={USER}
-WorkingDirectory={BASE_DIR}
-ExecStart={VENV_PATH}/bin/celery -A {APP_MODULE} worker --loglevel=info
+User=ubuntu
+Group=www-data
+WorkingDirectory={PROJECT_ROOT}
+Environment="PATH={VENV_PATH}"
+ExecStart={PYTHON_PATH} -m celery \\
+  -A {DJANGO_MODULE} worker \\
+  --loglevel=INFO \\
+  --concurrency=2 \\
+  --prefetch-multiplier=1
+
 Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
 """
 
-CELERY_BEAT_SERVICE = f"""
+BEAT_SERVICE = f"""
 [Unit]
-Description=ECHOME Celery Beat
-After=network.target redis.service
+Description=Celery Beat Scheduler
+After=network.target
 
 [Service]
-User={USER}
-WorkingDirectory={BASE_DIR}
-ExecStart={VENV_PATH}/bin/celery -A {APP_MODULE} beat --loglevel=info
+User=ubuntu
+Group=www-data
+WorkingDirectory={PROJECT_ROOT}
+Environment="PATH={VENV_PATH}"
+ExecStart={PYTHON_PATH} -m celery \\
+  -A {DJANGO_MODULE} beat \\
+  --loglevel=INFO
+
 Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
 """
 
+# -------------------------------
+# HELPERS
+# -------------------------------
 
 def write_service(name, content):
-    service_path = f"/etc/systemd/system/{name}"
-    print(f"[+] Creating: {service_path}")
+    path = Path(f"/etc/systemd/system/{name}.service")
+    with open(path, "w") as f:
+        f.write(content.strip() + "\n")
+    print(f"[+] Created {path}")
 
-    with open("/tmp/temp.service", "w") as f:
-        f.write(content)
+def run(cmd):
+    subprocess.run(cmd, check=False)
 
-    subprocess.run(["sudo", "mv", "/tmp/temp.service", service_path], check=True)
+def reload_systemd():
+    run(["sudo", "systemctl", "daemon-reload"])
+    run(["sudo", "systemctl", "reset-failed"])
 
+def enable_services():
+    for svc in ["gunicorn", "worker", "beat"]:
+        run(["sudo", "systemctl", "enable", svc])
 
-def verify_service(name):
-    service_path = f"/etc/systemd/system/{name}"
-    if os.path.exists(service_path):
-        print(f"[✅ VERIFIED] {service_path} exists")
-    else:
-        print(f"[❌ ERROR] {service_path} NOT FOUND")
+def start_services():
+    for svc in ["gunicorn", "worker", "beat"]:
+        run(["sudo", "systemctl", "start", svc])
 
+def stop_services():
+    for svc in ["gunicorn", "worker", "beat"]:
+        run(["sudo", "systemctl", "stop", svc])
 
-def main():
-    print("\n🚀 Creating systemd service files for ECHOME (NO START / NO ENABLE)\n")
+def restart_services():
+    for svc in ["gunicorn", "worker", "beat"]:
+        run(["sudo", "systemctl", "restart", svc])
 
-    write_service("echome_gunicorn.service", GUNICORN_SERVICE)
-    write_service("echome_celery.service", CELERY_WORKER_SERVICE)
-    write_service("echome_beat.service", CELERY_BEAT_SERVICE)
+def status_services():
+    for svc in ["gunicorn", "worker", "beat"]:
+        print(f"\n--- {svc.upper()} STATUS ---")
+        run(["sudo", "systemctl", "status", svc])
 
-    print("\n🔎 Verifying service files...\n")
+# -------------------------------
+# COMMAND HANDLER
+# -------------------------------
 
-    verify_service("echome_gunicorn.service")
-    verify_service("echome_celery.service")
-    verify_service("echome_beat.service")
+def setup():
+    print("[*] Writing systemd service files...")
+    write_service("gunicorn", GUNICORN_SERVICE)
+    write_service("worker", WORKER_SERVICE)
+    write_service("beat", BEAT_SERVICE)
 
-    print("\n✅ Service file creation & verification complete.")
-    print("\n⚠️ IMPORTANT: Now run these manually:")
-    print("sudo systemctl daemon-reload")
-    print("sudo systemctl enable echome_gunicorn echome_celery echome_beat")
-    print("sudo systemctl start echome_gunicorn echome_celery echome_beat")
+    print("[*] Reloading systemd...")
+    reload_systemd()
 
+    print("[*] Enabling services...")
+    enable_services()
 
-if __name__ == "__main__":
-    main()
+    print("[✅] Setup completed. Now run: ./setup_systemd.py start")
+
+def start():n
+    print("[*] Starting services...")
+    start_services()
+    print("[✅] Services started.")
+
+def stop():
+    print("[*] Stopping services...")
+    stop_services()
+    print("[✅] Services stopped.")
+
+def restart():
+    print("[*] Restarting services...")
+    restart_services()
+    print("[✅] Services restarted.")
+
+def status():
+    status_services()
+
+# -------------------------------
+# ENTRY POINT
+# -------------------------------
+
+if len(sys.argv) != 2:
+    print("""
+Usage:
+  ./setup_systemd.py setup    → create + enable services
+  ./setup_systemd.py start    → start services
+  ./setup_systemd.py stop     → stop services
+  ./setup_systemd.py restart  → restart services
+  ./setup_systemd.py status   → show status
+""")
+    sys.exit(1)
+
+cmd = sys.argv[1].lower()
+
+if cmd == "setup":
+    setup()
+elif cmd == "start":
+    start()
+elif cmd == "stop":
+    stop()
+elif cmd == "restart":
+    restart()
+elif cmd == "status":
+    status()
+else:
+    print("❌ Unknown command:", cmd)
+    sys.exit(1)
