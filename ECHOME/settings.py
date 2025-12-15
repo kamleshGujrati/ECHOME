@@ -23,6 +23,7 @@ DEBUG = False
 
 # Allowed hosts
 # ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS")
+custom_host = os.getenv("CUSTOM_HOST")
 
 ALLOWED_HOSTS = [
     "echome.work.gd",
@@ -30,6 +31,7 @@ ALLOWED_HOSTS = [
     "13.203.229.52",
     "127.0.0.1",
     "localhost",
+    f"{custom_host}",
 ]
 
 
