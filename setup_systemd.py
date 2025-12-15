@@ -211,5 +211,4 @@ elif cmd == "restart":
 elif cmd == "status":
     status()
 else:
-    print("❌ Unknown command:", cmd)
     sys.exit(1)
