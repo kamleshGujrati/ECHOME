@@ -26,9 +26,6 @@ DEBUG = False
 custom_host = os.getenv("CUSTOM_HOST")
 
 ALLOWED_HOSTS = [
-    "echome.work.gd",
-    "www.echome.work.gd",
-    "13.203.229.52",
     "127.0.0.1",
     "localhost",
     f"{custom_host}",
@@ -137,7 +134,7 @@ tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': tmpPostgres.name.decode() if isinstance(tmpPostgres.name, bytes) else tmpPostgres.name.replace('/', ''),
+        'NAME': tmpPostgres.path.lstrip('/'),
         'USER': tmpPostgres.username,
         'PASSWORD': tmpPostgres.password,
         'HOST': tmpPostgres.hostname,
