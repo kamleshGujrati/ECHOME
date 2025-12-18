@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-default-key")
 
 # Debug mode
 # DEBUG = os.getenv("DEBUG", "False") == "True"
-DEBUG = False
+DEBUG = True
 
 # Allowed hosts
 # ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS")
@@ -68,21 +68,17 @@ GMAIL_PASSWORD = os.getenv("GMAIL_PASSWORD")  # legacy support
 # APPLICATIONS
 # -----------------------------------------
 INSTALLED_APPS = [
-
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-
     # Your apps
     "accounts",     # custom User model + auth
     "worker",
     "ECHOME",
 ]
 
-SITE_ID = 1  # Required for allauth
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -98,7 +94,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'accounts.middleware.CustomAuthMiddleware',
-    # ← all-auth wants this
+
 
 ]
 
@@ -152,7 +148,7 @@ DATABASES = {
 # -----------------------------------------
 # AUTHENTICATION & CUSTOM USER MODEL
 # -----------------------------------------
-AUTH_USER_MODEL = "accounts.User"# Use default User model; change to "accounts.User" if using custom model
+AUTH_USER_MODEL = "accounts.User"
 
 
 AUTHENTICATION_BACKENDS = [
@@ -193,8 +189,9 @@ USE_TZ = True
 # STATIC FILES
 # -----------------------------------------
 STATIC_URL = "/static/"
-# STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
 # STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
