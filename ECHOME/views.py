@@ -81,7 +81,7 @@ def process_secure_upload(request):
             file_ext = ext,
             file_mime = mime
         )
-        file_id=file.save(file_bytes)
+        file_id=file.store(file_bytes)
         do_uploads.delay(file_id,capsule.id)
 
         return JsonResponse("stored successfully", safe=False, status=200)
