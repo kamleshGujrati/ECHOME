@@ -18,8 +18,8 @@ load_dotenv(dotenv_path=env_path, override=True)
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-default-key")
 
 # Debug mode
-# DEBUG = os.getenv("DEBUG", "False") == "True"
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
+
 
 # Allowed hosts
 # ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS")
