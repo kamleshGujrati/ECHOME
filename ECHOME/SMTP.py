@@ -7,7 +7,7 @@ import smtplib
 
 
 def send_email_with_attachment(file_info, to_email, time, time_difference, subject=None,
-                               template_name='Mail.html', context_extra=None):
+                               template_name='mail.html', context_extra=None):
 
     gmail_user = 'echhouss@gmail.com'
     gmail_pass = settings.GMAIL_PASSWORD
