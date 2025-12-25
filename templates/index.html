@@ -38,12 +38,14 @@
             <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Login</a>
 
             {% else %}
-            <span style="color: #6366F1FF ; margin-left: 2rem; font-size:1rem">
-            <p><strong>Hello, {{ request.custom_user.username }}</strong></p>
+            <span style="color: #6366F1FF ; margin-left: 2rem; font-size:1rem"   >
+
+            <a href="{% url 'dashboard' %}" class="btn btn-primary">
+            <i class="fa-solid fa-user-circle"></i> <strong>{{ request.custom_user.username }}</strong>
+            </a>
 
             </span>
 
-            <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">Logout</a>
 
             <a href="{% url 'formpage' %}" class="btn btn-primary">
                 <i class="fas fa-paper-plane"></i> Get Started
@@ -76,7 +78,7 @@
                 <div class="stat-grid">
 
                     <div class="stat">
-                        <div id="stat-sent" class="stat-number">0</div>
+                        <div id="stat-sent" class="stat-number">{{capsule_data.sent}}</div>
                         <div class="stat-label">Messages Sent</div>
                     </div>
 
@@ -86,17 +88,17 @@
                     </div>
 
                     <div class="stat">
-                        <div id="stat-total-users" class="stat-number">0</div>
+                        <div id="stat-total-users" class="stat-number"> {{capsule_data.total_users}}</div>
                         <div class="stat-label">Users</div>
                     </div>
 
                     <div class="stat">
-                        <div id="stat-pending" class="stat-number">0</div>
+                        <div id="stat-pending" class="stat-number">{{capsule_data.pending}}</div>
                         <div class="stat-label">Active Messages</div>
                     </div>
 
                     <div class="stat" style="display:none">
-                        <div id="stat-deleted" class="stat-number">0</div>
+                        <div id="stat-deleted" class="stat-number">{{capsule_data.sent}}</div>
                         <div class="stat-label">Deleted</div>
                     </div>
 
@@ -104,7 +106,6 @@
             </div>
         </div>
 
-    </div>
     </div>
 </header>
 
@@ -188,9 +189,24 @@
             <div class="member-card animate-on-scroll">
                 <div class="avatar"><i class="fas fa-user"></i></div>
                 <h3>Kamlesh Gujrati</h3>
-                <p class="member-role">Backend Developer</p>
+                <p class="member-role">Backend Developer & Project manager </p>
                 <p class="member-bio">Building reliability and APIs.</p>
             </div>
+            <div class="member-card animate-on-scroll">
+                <div class="avatar"><i class="fas fa-user"></i></div>
+                <h3>ayush kumar malviya </h3>
+                <p class="member-role">UI/UX Designer</p>
+                <p class="member-bio">Graphic Designer</p>
+            </div>
+             <div class="member-card animate-on-scroll">
+                <div class="avatar"><i class="fas fa-user"></i></div>
+                <h3>Vaibhav Saini </h3>
+                <p class="member-role">Front-end</p>
+                <p class="member-bio">Web developer</p>
+            </div>
+
+
+
         </div>
     </div>
 </section>
@@ -259,25 +275,25 @@
 <!-- Scripts -->
 <script src="{% static "js/main.js"%}"></script>
 <script src="{% static "js/animations.js"%}"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
+<!--<script>-->
+<!--    document.addEventListener("DOMContentLoaded", () => {-->
 
-        fetch("/time_capsules")
+<!--        fetch("/time_capsules")-->
 
-            .then(res => res.json())
-            .then(data => {
-                capsules=data.total_capsules;
-                document.getElementById("stat-total-users").innerText = capsules.total_users;
-                document.getElementById("stat-pending").innerText = capsules.pending;
-                document.getElementById("stat-sent").innerText = capsules.sent;
-                document.getElementById("stat-deleted").innerText = capsules.deleted;
+<!--            .then(res => res.json())-->
+<!--            .then(data => {-->
+<!--                capsules=data.total_capsules;-->
+<!--                document.getElementById("stat-total-users").innerText = capsules.total_users;-->
+<!--                document.getElementById("stat-pending").innerText = capsules.pending;-->
+<!--                document.getElementById("stat-sent").innerText = capsules.sent;-->
+<!--                document.getElementById("stat-deleted").innerText = capsules.deleted;-->
 
-            })
+<!--            })-->
 
-            .catch(err => console.error("Stats fetch error:", err));
+<!--            .catch(err => console.error("Stats fetch error:", err));-->
 
-    });
-</script>
+<!--    });-->
+<!--</script>-->
 
 </body>
 </html>

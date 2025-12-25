@@ -3,24 +3,25 @@ from django.http import JsonResponse
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
 from .models import TimeCapsule , file
-# from .IPFS import FilebaseIPFS
-# from .BLOCK_CHAIN import ChainContract
 from django.core.exceptions import ValidationError
 from accounts.decorators import custom_login_required
 from django.shortcuts import render ,redirect , get_object_or_404
-from worker.utility_functions import utility_functions
 from accounts.models import User
 from worker.tasks import do_uploads
-# client = utility_functions()
-#
-# contract = ChainContract()  # Initialize the contract
-# ipfs = FilebaseIPFS()
+
 
 def homepage(request):
-    return render(request, 'index.html')
+    capsule_data = {
+        "total_users": User.objects.count(),
+        "pending": TimeCapsule.objects.filter(status="pending").count(),
+        "deleted": TimeCapsule.objects.filter(status="deleted").count(),
+        "sent": TimeCapsule.objects.filter(status="sent").count(),
+    }
+    return render(request, 'index.html' , {'capsule_data': capsule_data})
 
 @custom_login_required
 def formpage(request):
+
     return render(request, 'form.html')
 
 @custom_login_required
@@ -52,24 +53,11 @@ def process_secure_upload(request):
             raise ValidationError("All fields (unlock_time, email, password) are required")
         print("got all data ")
 
-        '''
-        
-        storing cid and to sepoliaetherium  via smart contracts 
-         
-         '''
-
-        # try:
-        #     print("storing to blockchain")
-        #     contract.store_data(cid,unlock_time)
-        # except Exception as e:
-        #     print("failed to store to blockchain")
-        #     ipfs.delete_file_by_cid(cid)
-        #     raise ValidationError("Failed to store data on the blockchain") from e
 
 
 
         '''
-        storing to mysql database 
+        storing to postgress database 
 
         '''
         capsule=TimeCapsule.objects.create(
@@ -81,8 +69,12 @@ def process_secure_upload(request):
             file_ext = ext,
             file_mime = mime
         )
-        file_id=file.save(file_bytes)
+
+        file_id=file.store(file_bytes)
+
+        print("stored file in db ",file_id)
         do_uploads.delay(file_id,capsule.id)
+        print("task dispatched to worker ")
 
         return JsonResponse("stored successfully", safe=False, status=200)
 
@@ -96,13 +88,19 @@ def dashboard(request):
     user_type = getattr(request.custom_user, 'user_type', None)
 
     msgs = TimeCapsule.objects.filter(user=request.custom_user).order_by('-storage_time')
+    profile={
+        'full_name': request.custom_user.full_name,
+        'email': request.custom_user.email,
+        "created_at": request.custom_user.created_at,
+    }
 
     # add friendly "approx_time" (unlock_time is seconds stored)
+
     for m in msgs:
         m.approx_time = m.storage_time + timedelta(seconds=m.unlock_time)
 
     return render(request, 'dashboard.html',
-                  {'messages': msgs, 'user_type': user_type})
+                  {'messages': msgs, 'user_type': user_type , 'profile':profile})
 
 @custom_login_required
 def delete_time_capsule(request, id ):
@@ -114,22 +112,5 @@ def delete_time_capsule(request, id ):
     messages.success(request, "Message marked deleted.")
     return redirect('dashboard')
 
-
-def total_capsules_api(request):
-    if request.method != 'GET':
-        return JsonResponse({'error': 'Only GET requests are allowed'}, status=405)
-
-    try:
-        capsule_data = {
-            "total_users": User.objects.count(),
-            "pending": TimeCapsule.objects.filter(status="pending").count(),
-            "deleted": TimeCapsule.objects.filter(status="deleted").count(),
-            "sent": TimeCapsule.objects.filter(status="sent").count(),
-        }
-        print(capsule_data)
-
-        return JsonResponse({'total_capsules': capsule_data}, status=200)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=400)
 
 

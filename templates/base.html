@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="{% static 'css/components.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
+
+
 <body>
 <!-- Navigation -->
 <nav class="navbar">
@@ -31,35 +33,30 @@
 
             <div class="nav-buttons">
 
-                {% if not request.custom_user %}
-                <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Login</a>
+                  {% if not request.custom_user %}
+            <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Login</a>
 
-                {% else %}
-                <span style="color: #6366F1FF ; margin-left: 2rem; font-size:1rem">
-                    <p><strong>Hello, {{ request.custom_user.username }}</strong></p>
-                 </span>
+            {% else %}
+            <span style="color: rgba(99,102,241,0) ; margin-left: 2rem; font-size:1rem"   >
 
-                <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">Logout</a>
-
-                <a href="{% url 'formpage' %}" class="btn btn-primary">
-                    <i class="fas fa-paper-plane"></i> Get Started
-                </a>
-                {% endif %}
-
-</div>
-
-        </ul>
-
-        <!-- Auth Buttons -->
-        <div class="nav-buttons">
-            <a href="{% url 'accounts:signup' %}" class="btn btn-ghost">
-                <i class="fas fa-user-plus"></i> Sign Up
+            <a href="{% url 'dashboard' %}" class="btn btn-primary">
+            <i class="fa-solid fa-user-circle"></i> <strong>{{ request.custom_user.username }}</strong>
             </a>
+
+            </span>
+
+
             <a href="{% url 'formpage' %}" class="btn btn-primary">
                 <i class="fas fa-paper-plane"></i> Get Started
             </a>
-        </div>
+            {% endif %}
+
+            </div>
+
+        </ul>
+
     </div>
+
 </nav>
 
 <!-- Main Content -->
@@ -104,5 +101,6 @@
 <script src="{% static 'js/main.js' %}"></script>
 <script src="{% static 'js/animations.js' %}"></script>
 {% block extra_js %}{% endblock %}
+
 </body>
 </html>

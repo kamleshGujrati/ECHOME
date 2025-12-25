@@ -54,7 +54,7 @@ class file(models.Model):
     class Meta:
         db_table = 'file_storage'
 
-    def save(file_bytes):
+    def store(file_bytes):
         f = file(file_data=file_bytes)
         f.save()
         return f.id

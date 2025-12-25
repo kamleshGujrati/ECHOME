@@ -191,9 +191,10 @@ def run_send_notification(self):
         raise self.retry(exc=exc, countdown=60)
 
 
-@shared_task(serializer="pickle")
+@shared_task
 def do_uploads(file_id,capsule_id):
-    file_bytes = file.get_and_delete(file_id)  # get file bytes and delete from db
+    file_bytes = file.get_and_delete(file_id)
+    # get file bytes and delete from db
     cid = ipfsClient.upload_and_get_cid(file_bytes)  # upload file to IPFS and get CID
     capsule = TimeCapsule.objects.get(id=capsule_id)
     if not cid:
@@ -202,7 +203,7 @@ def do_uploads(file_id,capsule_id):
         return
     # update cid in database
     capsule.cid = cid[-12:]
-    #store cid to blockchain
+
     try:
         contract.store_data(cid, capsule.unlock_time)
 

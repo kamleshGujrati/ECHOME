@@ -102,3 +102,8 @@ def logout_view(request):
     resp = redirect("homepage")
     resp.delete_cookie(COOKIE_NAME)
     return resp
+
+# def profile(request):
+#     if not request.custom_user:
+#         return redirect("login")
+#     return render(request, "accounts/profile.html", {"user": request.custom_user})
