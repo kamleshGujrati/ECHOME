@@ -1,109 +1,127 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    function showError(input, message) {
-        clearError(input);
-        const err = document.createElement("div");
-        err.className = "input-error";
-        err.innerText = message;
-        input.classList.add("input-invalid");
-        input.parentNode.appendChild(err);
-    }
+    document.querySelectorAll("input, textarea").forEach(field => {
 
-    function clearError(input) {
-        input.classList.remove("input-invalid");
-        const existing = input.parentNode.querySelector(".input-error");
-        if (existing) existing.remove();
-    }
+        field.addEventListener("input", () => {
 
-    function validEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    function validUsername(u) {
-        return /^[a-zA-Z0-9_]{3,20}$/.test(u);
-    }
-
-    function validFullName(name) {
-        return name.trim().length >= 3;
-    }
-
-    /* -------------------- SIGNUP -------------------- */
-    const signupForm = document.getElementById("signupForm");
-
-    if (signupForm) {
-        signupForm.addEventListener("submit", (e) => {
-
-            const fullName = document.getElementById("fullName");
-            const username = document.getElementById("username");
-            const email = document.getElementById("email");
-            const pass = document.getElementById("password");
-            const conf = document.getElementById("confirmPassword");
-
-            let errors = 0;
-            [fullName, username, email, pass, conf].forEach(clearError);
-
-            if (!validFullName(fullName.value)) {
-                showError(fullName, "Enter a valid full name");
-                errors++;
-            }
-
-            if (!validUsername(username.value)) {
-                showError(username, "Username must be 3–20 characters.");
-                errors++;
-            }
-
-            if (!validEmail(email.value)) {
-                showError(email, "Enter a valid email address");
-                errors++;
-            }
-
-            if (pass.value.length < 6) {
-                showError(pass, "Password must be at least 6 characters");
-                errors++;
-            }
-
-            if (pass.value !== conf.value) {
-                showError(conf, "Passwords do not match");
-                errors++;
-            }
-
-            if (errors > 0) {
-                e.preventDefault();
-                return;
-            }
-
+            validateField(field);
 
         });
-    }
 
-    /* -------------------- LOGIN -------------------- */
-    const loginForm = document.getElementById("loginForm");
+    });
 
-    if (loginForm) {
-        loginForm.addEventListener("submit", (e) => {
-
-            const email = document.getElementById("loginEmail");
-            const password = document.getElementById("loginPassword");
-
-            let errors = 0;
-            [email, password].forEach(clearError);
-
-            if (!validEmail(email.value)) {
-                showError(email, "Invalid email");
-                errors++;
-            }
-
-            if (!password.value.trim()) {
-                showError(password, "Password required");
-                errors++;
-            }
-
-            if (errors > 0) {
-                e.preventDefault();
-                return;
-            }
-
-
-        });
-    }
 });
+
+function validateField(field){
+
+    const value = field.value.trim();
+
+    clearError(field);
+
+    if(field.hasAttribute("required") && value === ""){
+
+        showError(field,"This field is required.");
+
+        return false;
+
+    }
+
+    if(field.type === "email"){
+
+        const emailPattern =
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if(value !== "" && !emailPattern.test(value)){
+
+            showError(field,"Enter a valid email.");
+
+            return false;
+
+        }
+
+    }
+
+    if(field.name === "username"){
+
+        if(value.length < 4){
+
+            showError(field,"Username must be at least 4 characters.");
+
+            return false;
+
+        }
+
+    }
+
+    if(field.name === "password"){
+
+        if(value.length < 8){
+
+            showError(field,"Password must be at least 8 characters.");
+
+            return false;
+
+        }
+
+    }
+
+    if(field.name === "confirm"){
+
+        const password =
+            document.querySelector("[name='password']");
+
+        if(password && value !== password.value){
+
+            showError(field,"Passwords do not match.");
+
+            return false;
+
+        }
+
+    }
+
+    field.style.borderColor = "green";
+
+    return true;
+
+}
+
+function showError(field,message){
+
+    field.style.borderColor = "red";
+
+    let error =
+        field.nextElementSibling;
+
+    if(error && error.classList.contains("error")){
+
+        error.textContent = message;
+
+        return;
+
+    }
+
+    error = document.createElement("div");
+
+    error.className = "error";
+
+    error.textContent = message;
+
+    field.after(error);
+
+}
+
+function clearError(field){
+
+    field.style.borderColor = "#ccc";
+
+    const error =
+        field.nextElementSibling;
+
+    if(error && error.classList.contains("error")){
+
+        error.remove();
+
+    }
+
+}

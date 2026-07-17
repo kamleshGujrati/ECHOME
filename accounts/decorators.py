@@ -15,3 +15,4 @@ def custom_login_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return _wrapped
+ 

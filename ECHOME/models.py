@@ -4,6 +4,9 @@ from django.db import models
 from django.utils import timezone
 from accounts.models import User
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Status(models.TextChoices):
     PENDING = 'pending', 'Pending'
@@ -48,22 +51,32 @@ class TimeCapsule(models.Model):
 
 
 
-class file(models.Model):
+class File(models.Model):
+    
     file_data = models.BinaryField()
 
     class Meta:
         db_table = 'file_storage'
+        
 
-    def save(file_bytes):
-        f = file(file_data=file_bytes)
-        f.save()
-        return f.id
-
-    def get_and_delete(file_id):
-        try:
-            f = file.objects.get(id=file_id)
-            file_bytes = f.file_data
-            f.delete()
+    def __str__(self):
+        
+        return self.id
+    
+    @classmethod
+    def get_and_delete(cls,file_id):
+        try: 
+            
+            file_obj= cls.objects.filter(id=file_id).first()
+            
+            file_bytes= file_obj.file_data
+            
+            file_obj.delete()
+            
+            logger.info(f"File with ID {file_id} deleted.")
+            
             return file_bytes
-        except file.DoesNotExist:
+        
+        except File.DoesNotExist:
+            logger.warning(f"File with ID {file_id} not found.")
             return None

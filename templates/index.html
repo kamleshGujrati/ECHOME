@@ -1,283 +1,133 @@
-<!DOCTYPE html>
+{% extends "base.html" %}
 {% load static %}
-<html lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>EchoMe — Send Messages to Your Future Self</title>
 
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+{% block title %}EchoMe – Send messages to the future{% endblock %}
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="{% static 'css/main.css'%}">
-    <link rel="stylesheet" href="{% static 'css/components.css'%}">
-</head>
-<body>
+{% block extra_css %}
+<style>
+    /* ===== Hero Section ===== */
+    .hero {
+        text-align: center;
+        padding: 60px 20px 40px;
+        background: linear-gradient(135deg, #f0f4ff, #d9e2f0);
+        border-radius: 16px;
+        margin-bottom: 40px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        color: #1e293b;
+    }
+    .hero p {
+        font-size: 1.2rem;
+        color: #334155;
+        max-width: 600px;
+        margin: 0 auto 20px;
+    }
+    .hero .btn {
+        font-size: 1.1rem;
+        padding: 12px 30px;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 30px;
+        text-decoration: none;
+        display: inline-block;
+        transition: background 0.2s;
+    }
+    .hero .btn:hover {
+        background: #1d4ed8;
+    }
 
-<!-- NAVBAR -->
-<nav class="navbar">
-    <div class="nav-container container">
-        <a class="logo" href="{%url 'homepage'%}" data-page="home">
-            <i class="fas fa-hourglass-half"></i> EchoMe
-        </a>
+    /* ===== Feature Cards ===== */
+    .features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        margin: 40px 0;
+    }
+    .feature-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px 25px;
+        flex: 1 1 200px;
+        max-width: 260px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        transition: transform 0.15s;
+    }
+    .feature-card:hover {
+        transform: translateY(-4px);
+        border-color: #b9c8e6;
+    }
+    .feature-card h3 {
+        margin-bottom: 8px;
+        color: #0f172a;
+    }
+    .feature-card p {
+        color: #475569;
+        font-size: 0.95rem;
+    }
+    .feature-card .icon {
+        font-size: 2rem;
+        margin-bottom: 6px;
+    }
 
-        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu"><i class="fas fa-bars"></i></button>
+    /* ===== Footer / extra ===== */
+    .footer-note {
+        text-align: center;
+        margin-top: 30px;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+    @media (max-width: 600px) {
+        .hero h1 { font-size: 2.2rem; }
+        .feature-card { flex: 1 1 100%; max-width: 100%; }
+    }
+</style>
+{% endblock %}
 
-        <ul class="nav-links" id="navLinks">
-            <li><a href="{% url "homepage" %}#features" data-page="home">Features</a></li>
-            <li><a href="{% url "homepage" %}#steps" data-page="home">How It Works</a></li>
-            <li><a href="{% url "homepage" %}#team" data-page="home">Team</a></li>
-            <li><a href="{% url "homepage" %}#contact" data-page="home">Contact</a></li>
-        </ul>
+{% block content %}
+<div class="hero">
+    <h1>⏳ EchoMe</h1>
+    <p>Send encrypted messages that unlock only when the time is right — for your future self or someone you care about.</p>
 
-        <div class="nav-buttons">
+     <a href="{% url 'formpage' %}" class="btn">📨 Create Your Message</a>
+  
+</div>
 
-            {% if not request.custom_user %}
-            <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Login</a>
-
-            {% else %}
-            <span style="color: #6366F1FF ; margin-left: 2rem; font-size:1rem">
-            <p><strong>Hello, {{ request.custom_user.username }}</strong></p>
-
-            </span>
-
-            <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">Logout</a>
-
-            <a href="{% url 'formpage' %}" class="btn btn-primary">
-                <i class="fas fa-paper-plane"></i> Get Started
-            </a>
-            {% endif %}
-
-        </div>
-
+<div class="features">
+    <div class="feature-card">
+        <div class="icon">🔐</div>
+        <h3>End‑to‑End Encrypted</h3>
+        <p>Your message is encrypted before it leaves your device. Only the recipient can unlock it.</p>
     </div>
-</nav>
-
-<!-- HERO -->
-<header class="hero">
-    <div class="hero-content container">
-        <div class="hero-text">
-            <h1>Send Messages to Your <span class="highlight">Future Self</span></h1>
-            <p class="lead">Write something now — receive it later. Surprise yourself, reflect, create nostalgia</p>
-
-            <div class="hero-buttons">
-                <a href="{% url "formpage" %}" class="btn btn-white btn-large"> <i class="fas fa-paper-plane"></i> Send
-                a Message</a>
-                <a href="{% url "homepage"%}#steps" class="btn btn-outline btn-large"> <i
-                    class="fas fa-play-circle"></i> How It Works</a>
-            </div>
-        </div>
-
-        <div class="hero-visual">
-            <div class="hero-card animate-on-scroll">
-                <h3><i class="fas fa-chart-line"></i> Platform Stats</h3>
-                <div class="stat-grid">
-
-                    <div class="stat">
-                        <div id="stat-sent" class="stat-number">0</div>
-                        <div class="stat-label">Messages Sent</div>
-                    </div>
-
-                    <div class="stat">
-                        <div class="stat-number">99.9%</div>
-                        <div class="stat-label">Delivery Rate</div>
-                    </div>
-
-                    <div class="stat">
-                        <div id="stat-total-users" class="stat-number">0</div>
-                        <div class="stat-label">Users</div>
-                    </div>
-
-                    <div class="stat">
-                        <div id="stat-pending" class="stat-number">0</div>
-                        <div class="stat-label">Active Messages</div>
-                    </div>
-
-                    <div class="stat" style="display:none">
-                        <div id="stat-deleted" class="stat-number">0</div>
-                        <div class="stat-label">Deleted</div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
+    <div class="feature-card">
+        <div class="icon">📅</div>
+        <h3>Set the Release Date</h3>
+        <p>Choose when your capsule opens — in 1 year, 5 years, or any custom future date.</p>
     </div>
+    <div class="feature-card">
+        <div class="icon">🎙️</div>
+        <h3>Text or Voice</h3>
+        <p>Send a written note or record an audio message. Your future self will hear your voice.</p>
     </div>
-</header>
+</div>
 
-<!-- FEATURES -->
-<section id="features" class="features">
-    <div class="container">
-        <div class="section-header animate-on-scroll">
-            <h2>Powerful Features</h2>
-            <p>Compose, schedule, and securely store messages for delivery on any future date and time.</p>
-        </div>
+<div style="text-align:center; margin: 30px 0 10px;">
+    <h2>How It Works</h2>
+    <ol style="display:inline-block; text-align:left; max-width:400px; margin:0 auto; padding-left:20px;">
+        <li><strong>Sign up</strong> – create your free account.</li>
+        <li><strong>Write</strong> – type a message or record audio.</li>
+        <li><strong>Set time</strong> – pick when it should be delivered.</li>
+        <li><strong>Wait</strong> – we’ll send it to your email on that day.</li>
+    </ol>
+</div>
+ 
+<p class="footer-note">
+    💡 <em>“The best time to plant a tree was 20 years ago. The second best time is now.”</em>
+</p>
 
-        <div class="features-grid">
-            <div class="feature-card animate-on-scroll">
-                <div class="feature-icon"><i class="fas fa-envelope-open-text"></i></div>
-                <h3>Send Future Messages</h3>
-                <p>Write now. Receive later.</p>
-            </div>
+{% endblock %}
 
-            <div class="feature-card animate-on-scroll">
-                <div class="feature-icon"><i class="fas fa-calendar-alt"></i></div>
-                <h3>Precise Scheduling</h3>
-                <p>Choose exact date & time for delivery.</p>
-            </div>
-
-            <div class="feature-card animate-on-scroll">
-                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-                <h3>Encrypted Storage</h3>
-                <p>Messages stay private until delivery.</p>
-            </div>
-
-            <div class="feature-card animate-on-scroll">
-                <div class="feature-icon"><i class="fas fa-user-clock"></i></div>
-                <h3>Nostalgic Reminders</h3>
-                <p>Reconnect with past you.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- STEPS -->
-<section id="steps" class="steps">
-    <div class="container">
-        <div class="section-header">
-            <h2>How EchoMe Works</h2>
-        </div>
-
-        <div class="steps-grid">
-            <div class="step-card animate-on-scroll">
-                <div class="step-number">1</div>
-                <h3>Write</h3>
-                <p>Compose your message.</p>
-            </div>
-            <div class="step-card animate-on-scroll">
-                <div class="step-number">2</div>
-                <h3>Schedule</h3>
-                <p>Pick date and time.</p>
-            </div>
-            <div class="step-card animate-on-scroll">
-                <div class="step-number">3</div>
-                <h3>Store</h3>
-                <p>We keep it secure.</p>
-            </div>
-            <div class="step-card animate-on-scroll">
-                <div class="step-number">4</div>
-                <h3>Receive</h3>
-                <p>Open it on the scheduled day.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- TEAM -->
-<section id="team" class="team">
-    <div class="container">
-        <div class="section-header">
-            <h2>Our Team</h2>
-            <p>The devs building EchoMe.</p>
-        </div>
-
-        <div class="team-grid">
-            <div class="member-card animate-on-scroll">
-                <div class="avatar"><i class="fas fa-user"></i></div>
-                <h3>Kamlesh Gujrati</h3>
-                <p class="member-role">Backend Developer</p>
-                <p class="member-bio">Building reliability and APIs.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- CONTACT -->
-<section id="contact" class="contact">
-    <div class="container">
-        <div class="section-header">
-            <h2>Contact</h2>
-            <p>Reach out if you need help.</p>
-        </div>
-
-        <div class="contact-grid">
-            <div class="contact-card animate-on-scroll">
-                <div class="contact-icon"><i class="fas fa-envelope"></i></div>
-                <h3>Email</h3>
-                <p>echhouss@gmail.com</p>
-            </div>
-            <div class="contact-card animate-on-scroll">
-                <div class="contact-icon"><i class="fas fa-phone"></i></div>
-                <h3>Phone</h3>
-                <p>+1-123-456-7890</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- CTA -->
-<section class="cta">
-    <div class="container">
-        <h2>Ready to write to your future?</h2>
-        <div class="cta-buttons">
-            <a href="{% url "formpage"%}" class="btn btn-primary btn-large"> <i class="fas fa-paper-plane"></i> Send a
-            Message</a>
-            <a href="{% url "accounts:signup"%}" class="btn btn-large"> <i class="fas fa-user-plus"></i> Create
-            Account</a>
-        </div>
-    </div>
-</section>
-
-<!-- FOOTER -->
-<footer class="footer">
-    <div class="container footer-content">
-        <div>
-            <div class="logo"><i class="fas fa-hourglass-half"></i> EchoMe</div>
-            <p>Store messages securely and receive them later.</p>
-        </div>
-        <div>
-            <h4>Quick Links</h4>
-            <ul>
-                <li><a href="{% url "homepage" %}#features">Features</a></li>
-                <li><a href="{% url "homepage" %}#steps">How it works</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4>Account</h4>
-            <ul>
-                <li><a href="{% url "accounts:signup" %}">Sign Up</a></li>
-                <li><a href="{% url "formpage" %}">Send Message</a></li>
-            </ul>
-        </div>
-    </div>
-    <div class="footer-bottom container">&copy; 2025 EchoMe</div>
-</footer>
-
-<!-- Scripts -->
-<script src="{% static "js/main.js"%}"></script>
-<script src="{% static "js/animations.js"%}"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-
-        fetch("/time_capsules")
-
-            .then(res => res.json())
-            .then(data => {
-                capsules=data.total_capsules;
-                document.getElementById("stat-total-users").innerText = capsules.total_users;
-                document.getElementById("stat-pending").innerText = capsules.pending;
-                document.getElementById("stat-sent").innerText = capsules.sent;
-                document.getElementById("stat-deleted").innerText = capsules.deleted;
-
-            })
-
-            .catch(err => console.error("Stats fetch error:", err));
-
-    });
-</script>
-
-</body>
-</html>

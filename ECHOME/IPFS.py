@@ -4,6 +4,11 @@ from django.conf import settings
 import io
 
 
+import logging 
+
+logger= logging.getLogger(__name__)
+
+
 def get_timestamp():
     """
     Generates a timestamped filename for uploads.
@@ -36,6 +41,8 @@ class FilebaseIPFS:
         try:
             if not object_name:
                 object_name = get_timestamp()
+                
+                logger.info(f"Generated object name: {object_name}")
 
             if isinstance(file_bytes_or_path, (bytes, bytearray)):
                 # Use BytesIO for uploading bytes
@@ -46,6 +53,8 @@ class FilebaseIPFS:
                     Key=object_name,
                     ExtraArgs={'Metadata': {'ipfs': 'true'}}
                 )
+                
+                
             elif isinstance(file_bytes_or_path, str):
                 # File path
                 self.client.upload_file(
@@ -59,14 +68,20 @@ class FilebaseIPFS:
 
             # Retrieve CID from metadata
             response = self.client.head_object(Bucket=self.bucket, Key=object_name)
-            cid = response['Metadata'].get('cid')
+            
+            logger.info(f"Upload successful. Metadata: {response['Metadata']}")
+            
+            cid = response['Metadata'].get('Cid')
+            
+            logger.info(f"Retrieved CID: {cid[:5]}...")  # Log first 5 characters of CID for brevity
+            
             if not cid:
-                print("CID not available in metadata.")
+                logger.warning("CID not available in metadata.")
                 return None
             return cid
 
         except Exception as e:
-            print(f"Upload failed: {str(e)}")
+            logger.error(f"Upload failed: {str(e)}")
             return None
 
     def get_file_by_cid(self, cid):
@@ -89,14 +104,14 @@ class FilebaseIPFS:
                         Bucket=self.bucket,
                         Key=obj['Key']
                     )['Metadata']
-                    if metadata.get('cid') == cid:
+                    if metadata.get('Cid') == cid:
                         object_key = obj['Key']
                         break
                 if object_key:
                     break
 
             if not object_key:
-                print("CID not found in bucket.")
+                logger.info(f"CID {cid} not found in bucket.")
                 return None
 
             # Get file bytes
@@ -107,7 +122,7 @@ class FilebaseIPFS:
             return  {'bytes': file_bytes}
 
         except Exception as e:
-            print(f"Retrieval failed: {str(e)}")
+            logger.error(f"Retrieval failed: {str(e)}")
             return None
 
     def delete_file_by_cid(self, cid):
@@ -136,15 +151,15 @@ class FilebaseIPFS:
                     break
 
             if not object_key:
-                print(f"CID {cid} not found in bucket.")
+                print(f"CID {cid[:5]}... not found in bucket.")
                 return False
 
             self.client.delete_object(Bucket=self.bucket, Key=object_key)
-            print(f"Successfully deleted file with CID: {cid}")
+            print(f"Successfully deleted file with CID: {cid[:5]}...")
             return True
 
         except Exception as e:
-            print(f"Deletion failed for CID {cid}: {str(e)}")
+            print(f"Deletion failed for CID {cid[:5]}...: {str(e)}")
             return False
 
 # ipfs = FilebaseIPFS()

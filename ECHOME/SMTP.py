@@ -4,6 +4,9 @@ from email.mime.application import MIMEApplication
 from django.template.loader import render_to_string
 from django.conf import settings
 import smtplib
+import logging
+
+logger=logging.getLogger(__name__)
 
 
 def send_email_with_attachment(file_info, to_email, time, time_difference, subject=None,
@@ -20,6 +23,7 @@ def send_email_with_attachment(file_info, to_email, time, time_difference, subje
     }
     if context_extra:
         context.update(context_extra)
+        logger.info(f"Context updated with extra data")
 
     body_html = render_to_string(template_name, context)
 
@@ -41,8 +45,8 @@ def send_email_with_attachment(file_info, to_email, time, time_difference, subje
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
             smtp.login(gmail_user, gmail_pass)
             smtp.send_message(msg)
-        print(" Email sent successfully!")
+        logger.info(" Email sent successfully!")
         return True
     except Exception as e:
-        print(f" Failed to send email: {str(e)}")
+        logger.error(f" Failed to send email: {str(e)}")
         return False

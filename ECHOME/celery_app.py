@@ -11,3 +11,5 @@ app.config_from_object("django.conf:settings", namespace="CELERY")
 
 # auto-discover tasks inside all apps
 app.autodiscover_tasks(['worker'])
+
+

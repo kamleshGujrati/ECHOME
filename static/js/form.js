@@ -1,17 +1,12 @@
 // form.js – time capsule form (text/audio + encryption + upload + confetti)
 
-const getCSRFToken = () => {
-    const meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.getAttribute('content') : '';
-};
-
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
                 cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 break;
             }
@@ -27,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const recordBtn = document.getElementById('recordBtn');
     const audioPlayback = document.getElementById('audioPlayback');
     const audioDataInput = document.getElementById('audioData');
-    const recIndicator = document.getElementById('recIndicator');
     const form = document.getElementById('timeCapsuleForm');
     const submitBtn = document.getElementById('submitBtn');
     const confettiContainer = document.getElementById('confetti');
@@ -71,13 +65,13 @@ document.addEventListener('DOMContentLoaded', function () {
     async function toggleRecording() {
         if (!isRecording) {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
 
                 mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, {type: 'audio/webm'});
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     const arrayBuffer = await audioBlob.arrayBuffer();
                     audioDataInput.arrayBuffer = arrayBuffer; // store raw bytes for encryption
 
@@ -88,9 +82,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 };
 
                 mediaRecorder.start();
-                recordBtn.innerHTML = '<span class="icon">⏹️</span><span class="text">Stop Recording</span>';
-                recordBtn.style.background = 'var(--tc-primary)';
-                recIndicator.style.display = 'flex';
+                recordBtn.textContent = 'Stop Recording';
+                recordBtn.style.background = '#e74c3c';
                 isRecording = true;
             } catch (err) {
                 console.error('Error accessing microphone:', err);
@@ -98,14 +91,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } else {
             mediaRecorder.stop();
-            recordBtn.innerHTML = '<span class="icon">🎙️</span><span class="text">Start Recording</span>';
-            recordBtn.style.background = 'var(--tc-secondary)';
-            recIndicator.style.display = 'none';
+            recordBtn.textContent = 'Start Recording';
+            recordBtn.style.background = '#2563eb';
             isRecording = false;
         }
     }
 
-    // === Crypto helpers (same as Django version) ===
+    // === Crypto helpers ===
     function uint8ArrayToWordArray(u8Array) {
         const words = [];
         let i = 0;
@@ -184,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         loadingOverlay.classList.add('active');
         submitBtn.disabled = true;
-        submitBtn.textContent = "Sealing...";
+        submitBtn.textContent = 'Sealing...';
 
         try {
             const messageType = inputTypeSelect.value;
@@ -228,10 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // encrypt
             const encryptedBytes = encryptBytesToUint8Array(dataBytes, encryptionPassword);
 
-            console.log("JS first32:", Array.from(encryptedBytes.slice(0, 32))
-                .map(b => b.toString(16).padStart(2, '0')).join(' '));
-
-            const blob = new Blob([encryptedBytes], {type: 'application/octet-stream'});
+            const blob = new Blob([encryptedBytes], { type: 'application/octet-stream' });
             const formData = new FormData();
             formData.append('email', email);
             formData.append('unlock_time', unlockTimeSeconds.toString());
@@ -240,11 +229,8 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('file_ext', fileExt);
             formData.append('encrypted_file', blob, 'encrypted_message.dat');
 
-            // 🔥 API endpoint placeholder – replace with your real one when ready
-            // const UPLOAD_URL ={% url 'process_secure_upload' %};
-
             const headers = {};
-            const csrf = getCookie('csrftoken') || getCSRFToken();
+            const csrf = getCookie('csrftoken');
             if (csrf) headers['X-CSRFToken'] = csrf;
 
             const response = await fetch(UPLOAD_URL, {
@@ -256,8 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
             let result = {};
             try {
                 result = await response.json();
-            } catch (_) {
-            }
+            } catch (_) {}
 
             if (response.ok) {
                 showStatusMessage('✨ Your time capsule has been sealed!', 'success');
@@ -275,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => {
                 loadingOverlay.classList.remove('active');
                 submitBtn.disabled = false;
-                submitBtn.textContent = "Seal Time Capsule";
+                submitBtn.textContent = 'Send';
             }, 800);
         }
     });
@@ -297,9 +282,9 @@ document.addEventListener('DOMContentLoaded', function () {
             confetti.style.opacity = '0.8';
 
             const animation = confetti.animate([
-                {top: '-10px', opacity: 0},
-                {top: Math.random() * 80 + '%', opacity: 0.9},
-                {top: '100%', opacity: 0}
+                { top: '-10px', opacity: 0 },
+                { top: Math.random() * 80 + '%', opacity: 0.9 },
+                { top: '100%', opacity: 0 }
             ], {
                 duration: 2000 + Math.random() * 2500,
                 easing: 'cubic-bezier(0.1, 0.8, 0.3, 1)'
@@ -321,16 +306,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showStatusMessage(message, type) {
         statusMessage.textContent = message;
-        statusMessage.className = `status-message ${type} show`;
+        statusMessage.className = `status-message ${type}`;
+        statusMessage.style.display = 'block';
         setTimeout(() => {
-            statusMessage.classList.remove('show');
+            statusMessage.style.display = 'none';
         }, 4500);
     }
-
-    // small hover effect
-    document.querySelectorAll('button, input, textarea, select').forEach(el => {
-        el.addEventListener('mouseenter', () => {
-            el.style.transition = 'all 0.18s ease';
-        });
-    });
 });

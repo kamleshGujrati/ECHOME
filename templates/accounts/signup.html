@@ -1,118 +1,56 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account — EchoMe</title>
+{% extends "base.html" %}
 
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+{% block title %}Signup{% endblock %}
 
-<nav class="navbar">
-    <div class="nav-container">
-        <a href="{% url 'homepage' %}" class="logo">
-            <i class="fas fa-hourglass-half"></i> EchoMe
-        </a>
-        <ul class="nav-links">
-            <li><a href="{% url 'homepage' %}">Home</a></li>
-        </ul>
-    </div>
-</nav>
+{% block content %}
+<div class="auth-box">
+    <h1>Create Account</h1>
 
-<section class="auth-container">
-    <div class="auth-box">
-        <h2>Create Your Account</h2>
+    <form method="post">
+        {% csrf_token %}
 
         {% if form.non_field_errors %}
-        <div class="input-error">{{ form.non_field_errors.0 }}</div>
+            <div class="error">{{ form.non_field_errors }}</div>
         {% endif %}
 
-        <form id="signupForm" method="POST" action="{% url 'accounts:signup' %}" class="auth-form">
-            {% csrf_token %}
+        <!-- Full Name -->
+        <label for="{{ form.full_name.id_for_label }}">Full Name</label>
+        {{ form.full_name }}
+        {% if form.full_name.errors %}
+            <div class="error">{{ form.full_name.errors }}</div>
+        {% endif %}
 
-            <div class="auth-group">
-                <label>Full Name</label>
-                <input type="text"
-                       name="full_name"
-                       id="fullName"
-                       placeholder="John Doe"
-                       value="{{ form.full_name.value|default:'' }}"
-                       required>
-                {% if form.full_name.errors %}
-                <small class="input-error">{{ form.full_name.errors.0 }}</small>
-                {% endif %}
-            </div>
+        <!-- Username -->
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+            <div class="error">{{ form.username.errors }}</div>
+        {% endif %}
 
-            <div class="auth-group">
-                <label>Username</label>
-                <input type="text"
-                       name="username"
-                       id="username"
-                       placeholder="johndoe"
-                       value="{{ form.username.value|default:'' }}"
-                       required>
-                {% if form.username.errors %}
-                <small class="input-error">{{ form.username.errors.0 }}</small>
-                {% endif %}
-            </div>
-            <div class="auth-group">
-                <label>Email Address</label>
-                <input type="email"
-                       name="email"
-                       id="email"
-                       placeholder="john@example.com"
-                       value="{{ form.email.value|default:'' }}"
-                       required>
-                {% if form.email.errors %}
-                <small class="input-error">{{ form.email.errors.0 }}</small>
-                {% endif %}
-            </div>
+        <!-- Email -->
+        <label for="{{ form.email.id_for_label }}">Email</label>
+        {{ form.email }}
+        {% if form.email.errors %}
+            <div class="error">{{ form.email.errors }}</div>
+        {% endif %}
 
-            <div class="auth-group">
-                <label>Password</label>
-                <input type="password"
-                       name="password"
-                       id="password"
-                       placeholder="••••••••"
-                       required>
-                {% if form.password.errors %}
-                <small class="input-error">{{ form.password.errors.0 }}</small>
-                {% endif %}
-            </div>
+        <!-- Password -->
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+            <div class="error">{{ form.password.errors }}</div>
+        {% endif %}
 
-            <div class="auth-group">
-                <label>Confirm Password</label>
-                <input type="password"
-                       name="confirm"
-                       id="confirmPassword"
-                       placeholder="••••••••"
-                       required>
-                {% if form.confirm.errors %}
-                <small class="input-error">{{ form.confirm.errors.0 }}</small>
-                {% endif %}
-            </div>
+        <!-- Confirm Password (field name is 'confirm') -->
+        <label for="{{ form.confirm.id_for_label }}">Confirm Password</label>
+        {{ form.confirm }}
+        {% if form.confirm.errors %}
+            <div class="error">{{ form.confirm.errors }}</div>
+        {% endif %}
 
-            <button type="submit" class="auth-btn">Sign Up</button>
+        <button type="submit">Create Account</button>
+    </form>
 
-            <div class="or-divider"><span>OR</span></div>
-
-            <button type="button" class="google-btn">
-                <i class="fab fa-google"></i> Continue with Google
-            </button>
-
-            <p class="auth-switch">
-                Already have an account? <a href="{% url 'accounts:login' %}">Login</a>
-            </p>
-        </form>
-    </div>
-</section>
-
-<script src="{% static 'js/validation.js' %}"></script>
-</body>
-</html>
+    <p>Already have an account? <a href="{% url 'accounts:login' %}">Login</a></p>
+</div>
+{% endblock %}
