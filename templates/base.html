@@ -1,108 +1,170 @@
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}EchoMe - Send Messages to Your Future Self{% endblock %}</title>
-
-    <!-- CSS Files -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    {% load static %}
+    <title>{% block title %}EchoMe{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    {% block extra_css %}{% endblock %}
+    <style>
+        /* ----- Override / Enhance base styles ----- */
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header / Nav */
+        header {
+            background: linear-gradient(90deg, #1e293b, #0f172a);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 18px;
+            background: transparent;
+        }
+
+        .nav-brand {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #facc15;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+            margin-right: 20px;
+        }
+        .nav-brand:hover {
+            color: #fde047;
+        }
+
+        nav a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            padding: 6px 4px;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+        }
+        nav a:hover {
+            color: #ffffff;
+            border-bottom-color: #facc15;
+        }
+
+        .nav-user {
+            color: #94a3b8;
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95rem;
+        }
+        .nav-user .avatar {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #facc15;
+            color: #0f172a;
+            text-align: center;
+            line-height: 28px;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        /* Main content */
+        main {
+            flex: 1;
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 0 24px 20px;
+            width: 100%;
+        }
+
+        /* Footer */
+        footer {
+            background: #f1f5f9;
+            text-align: center;
+            padding: 20px;
+            color: #475569;
+            font-size: 0.85rem;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 20px;
+        }
+        footer a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            nav {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+            .nav-brand {
+                text-align: center;
+                margin-right: 0;
+            }
+            .nav-user {
+                margin-right: 0;
+                justify-content: center;
+            }
+            nav a {
+                text-align: center;
+                padding: 8px;
+            }
+        }
+    </style>
+    {% block extra_css %} {% endblock %}
 </head>
 <body>
-<!-- Navigation -->
-<nav class="navbar">
-    <div class="nav-container">
-        <a href="{% url 'homepage' %}" class="logo">
-            <i class="fas fa-hourglass-half"></i> EchoMe
-        </a>
+    <header>
+        <nav>
 
-        <!-- Navigation Links -->
-        <ul class="nav-links" id="navLinks">
-            <li><a href="{% url 'homepage' %}#features"><i class="fas fa-star"></i> Features</a></li>
-            <li><a href="{% url 'homepage' %}#steps"><i class="fas fa-play-circle"></i> How It Works</a></li>
-            <li><a href="{% url 'homepage' %}#team"><i class="fas fa-users"></i> Team</a></li>
-            <li><a href="{% url 'homepage' %}#contact"><i class="fas fa-envelope"></i> Contact</a></li>
+            <a href="{% url 'homepage' %}" class="nav-brand">⏳ EchoMe</a>
+            {% if request.custom_user %}
+                <span class="nav-user">
+                    <span class="avatar">{{ request.custom_user.username|first|upper }}</span>
+                    {{ request.custom_user.username }}
+                </span>
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'formpage' %}">Send</a>
+                <a href="{% url 'accounts:logout' %}">Logout</a>
+            {% else %}
+                <span class="nav-user">👋 Guest</span>
+                <a href="{% url 'accounts:login' %}">Login</a>
+                <a href="{% url 'accounts:signup' %}">Signup</a>
+            {% endif %}
+        
+        </nav>
+    </header>
 
-            <div class="nav-buttons">
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
 
-                {% if not request.custom_user %}
-                <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Login</a>
 
-                {% else %}
-                <span style="color: #6366F1FF ; margin-left: 2rem; font-size:1rem">
-                    <p><strong>Hello, {{ request.custom_user.username }}</strong></p>
-                 </span>
+    
 
-                <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">Logout</a>
+    <footer>
+        &copy; {% now "Y" %} EchoMe — <a href="{% url 'homepage' %}">Home</a> &bull; Made with 💛 for future you.
+    </footer>
 
-                <a href="{% url 'formpage' %}" class="btn btn-primary">
-                    <i class="fas fa-paper-plane"></i> Get Started
-                </a>
-                {% endif %}
-
-</div>
-
-        </ul>
-
-        <!-- Auth Buttons -->
-        <div class="nav-buttons">
-            <a href="{% url 'accounts:signup' %}" class="btn btn-ghost">
-                <i class="fas fa-user-plus"></i> Sign Up
-            </a>
-            <a href="{% url 'formpage' %}" class="btn btn-primary">
-                <i class="fas fa-paper-plane"></i> Get Started
-            </a>
-        </div>
-    </div>
-</nav>
-
-<!-- Main Content -->
-<main>
-    {% block content %}{% endblock %}
-</main>
-
-<!-- Footer -->
-<footer class="footer">
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-section">
-                <div class="logo">
-                    <i class="fas fa-hourglass-half"></i> EchoMe
-                </div>
-                <p>Send messages to your future self. Connect across time.</p>
-            </div>
-            <div class="footer-section">
-                <h4>Quick Links</h4>
-                <ul>
-                    <li><a href="{% url 'homepage' %}#features">Features</a></li>
-                    <li><a href="{% url 'homepage' %}#steps">How It Works</a></li>
-                    <li><a href="{% url 'homepage' %}#team">Our Team</a></li>
-                    <li><a href="{% url 'homepage' %}#contact">Contact</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Account</h4>
-                <ul>
-                    <li><a href="{% url 'accounts:signup' %}">Sign Up</a></li>
-                    <li><a href="{% url 'formpage' %}">Send Message</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2025 EchoMe. Built with passion by our development team.</p>
-        </div>
-    </div>
-</footer>
-
-<!-- JavaScript Files -->
-<script src="{% static 'js/main.js' %}"></script>
-<script src="{% static 'js/animations.js' %}"></script>
-{% block extra_js %}{% endblock %}
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

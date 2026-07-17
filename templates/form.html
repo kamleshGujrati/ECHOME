@@ -1,199 +1,118 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    {% load static %}
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>Send Message — EchoMe</title>
+{% extends "base.html" %}
+{% load static %}
 
-    <!-- Meta (optional) -->
-    <meta name="description"
-          content="Send encrypted messages to your future self with EchoMe. Secure time capsules delivered when you choose.">
-    <meta name="csrf-token" content=""> <!-- optional, safe to leave blank -->
+{% block title %}Send Message{% endblock %}
 
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+{% block extra_css %}
+<style>
+    /* Additional form‑specific styles */
+    .status-message {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        display: none;
+    }
+    .status-message.success {
+        background: #d4edda;
+        color: #155724;
+        display: block;
+    }
+    .status-message.error {
+        background: #f8d7da;
+        color: #721c24;
+        display: block;
+    }
+    #loadingOverlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(255,255,255,0.8);
+        z-index: 999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        backdrop-filter: blur(3px);
+    }
+    #loadingOverlay.active { display: flex; }
+    #confetti {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 1000;
+        display: none;
+    }
+    #recordBtn {
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    #recordBtn:hover { background: #1d4ed8; }
+</style>
+{% endblock %}
 
-    <!-- Global styles -->
-    <link rel="stylesheet" href="{% static 'css/main.css'%}">
-    <link rel="stylesheet" href="{% static 'css/components.css'%}">
-    <!-- Form-specific styles -->
-    <link rel="stylesheet" href="{% static 'css/form.css'%}">
-</head>
-<body>
+{% block content %}
+<h1>Send a Message</h1>
 
-<!-- Shared NAVBAR (same style as index) -->
-<nav class="navbar">
-
-    <div class="nav-container container">
-        <a class="logo" href="{% url "homepage" %}" data-page="home">
-            <i class="fas fa-hourglass-half"></i> EchoMe
-        </a>
-
-        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menu">
-            <i class="fas fa-bars"></i>
-        </button>
-
-         <div class="nav-buttons">
-
-            {% if not request.custom_user %}
-            <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Login</a>
-
-            {% else %}
-            <span style="color: #6366F1FF ; margin-left: 2rem; font-size:1rem">
-            <p><strong>Hello, {{ request.custom_user.username }}</strong></p>
-
-            </span>
-
-            <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">Logout</a>
-
-            <a href="{% url 'formpage' %}" class="btn btn-primary">
-                <i class="fas fa-paper-plane"></i> Get Started
-            </a>
-            {% endif %}
-
-        </div>
-    </div>
-</nav>
-
-<!-- FORM PAGE CONTENT -->
-<main class="form-section">
+<form id="timeCapsuleForm">
     {% csrf_token %}
-    <div class="timecapsule-container">
-        <div class="header">
-            <h2> Send a Message to the Future</h2>
-            <div class="divider"></div>
-        </div>
 
-        <form id="timeCapsuleForm" class="form-fade" enctype="multipart/form-data">
-            <!-- message type -->
-            <div class="form-group">
-                <label for="inputType" class="form-label">Choose message type:</label>
-                <div class="select-wrapper">
-                    <select id="inputType" name="inputType" class="form-select">
-                        <option value="text"> Text Message</option>
-                        <option value="audio">Voice Message</option>
-                    </select>
-                    <div class="select-arrow"></div>
-                </div>
-            </div>
-
-            <!-- text input -->
-            <div id="textInputContainer" class="input-container">
-                <label for="textMessage" class="form-label"> Type your message:</label>
-                <div class="textarea-wrapper">
-            <textarea id="textMessage" name="textMessage" rows="4"
-                      placeholder="Write something amazing for your future self..."
-                      class="form-textarea"></textarea>
-                    <div class="textarea-corner"></div>
-                </div>
-            </div>
-
-            <!-- audio input -->
-            <div id="audioInputContainer" class="input-container" style="display:none;">
-                <label class="form-label">🎙️ Record your voice message:</label>
-                <div class="audio-controls">
-                    <button type="button" id="recordBtn" class="record-btn">
-                        <span class="icon">🎙️</span>
-                        <span class="text">Start Recording</span>
-                    </button>
-                    <div class="recording-indicator" id="recIndicator" style="display:none;">
-                        <div class="pulse-dot"></div>
-                        <span>Recording...</span>
-                    </div>
-                </div>
-                <audio id="audioPlayback" controls style="display:none;"></audio>
-                <input type="hidden" id="audioData" name="audioData">
-            </div>
-
-            <!-- unlock time -->
-            <div class="form-group">
-                <label class="form-label"> When should the message unlock?</label>
-                <div class="select-wrapper">
-                    <select id="timeSelect" class="form-select">
-                        <option value="31536000">After 1 Year</option>
-                        <option value="157680000">After 5 Years</option>
-                        <option value="custom">Custom Date & Time</option>
-                    </select>
-                    <div class="select-arrow"></div>
-                </div>
-            </div>
-
-            <!-- custom datetime -->
-            <div class="form-group" id="customDatetimeContainer" style="display:none;">
-                <label for="customDatetime" class="form-label">Select a Date & Time:</label>
-                <input type="datetime-local" id="customDatetime" name="customDatetime" class="form-input">
-            </div>
-
-            <!-- email -->
-            <div class="form-group">
-                <label for="email" class="form-label"> Where should we deliver your message?</label>
-                <div class="input-wrapper">
-                    <input type="email" id="email" name="email" required
-                           placeholder="your.email@example.com"
-                           class="form-input">
-                    <div class="input-highlight"></div>
-                </div>
-            </div>
-
-            <!-- submit -->
-            <div class="submit-container">
-                <button type="submit" id="submitBtn" class="submit-btn">Seal Time Capsule</button>
-                <div class="confetti-container" id="confetti"></div>
-            </div>
-        </form>
-
-
+    <div>
+        <label for="inputType">Message Type</label>
+        <select id="inputType" name="inputType">
+            <option value="text">Text</option>
+            <option value="audio">Audio</option>
+        </select>
     </div>
-</main>
 
-<!-- Loading overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Sealing your time capsule...</div>
-</div>
-
-<!-- Status toast -->
-<div class="status-message" id="statusMessage"></div>
-
-<!-- FOOTER -->
-<footer class="footer">
-    <div class="container footer-content">
-        <div>
-            <div class="logo"><i class="fas fa-hourglass-half"></i> EchoMe</div>
-            <p>Send messages to your future self.</p>
-        </div>
-        <div>
-            <h4>Quick Links</h4>
-            <ul>
-                <li><a href="{% url "homepage" %}#features">Features</a></li>
-                <li><a href="{% url "homepage" %}#steps">How It Works</a></li>
-            </ul>
-        </div>
-        <div>
-            <h4>Account</h4>
-            <ul>
-                <li><a href="{% url "accounts:signup" %}">Sign Up</a></li>
-            </ul>
-        </div>
+    <div id="textInputContainer">
+        <label for="textMessage">Message</label>
+        <textarea id="textMessage" name="textMessage" rows="5"></textarea>
     </div>
-    <div class="footer-bottom container">&copy; 2025 EchoMe</div>
-</footer>
 
+    <div id="audioInputContainer" style="display:none;">
+        <button type="button" id="recordBtn">Start Recording</button>
+        <audio id="audioPlayback" controls style="display:none;"></audio>
+        <input type="hidden" id="audioData" name="audioData">
+    </div>
 
-<!-- CryptoJS (for encryption) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <div>
+        <label for="timeSelect">Unlock Time</label>
+        <select id="timeSelect" name="timeSelect">
+            <option value="31536000">1 Year</option>
+            <option value="157680000">5 Years</option>
+            <option value="custom">Custom</option>
+        </select>
+    </div>
 
-<!-- Global JS -->
-<script src="{%static 'js/main.js' %}"></script>
-<script src="{% static 'js/animations.js' %}"></script>
-<script src="{% static 'js/validation.js' %}"></script>
+    <div id="customDatetimeContainer" style="display:none;">
+        <input type="datetime-local" id="customDatetime" name="customDatetime">
+    </div>
 
-<!-- Form-specific JS -->
+    <div>
+        <label for="email">Recipient Email</label>
+        <input type="email" id="email" name="email" required>
+    </div>
+
+    <button type="submit" id="submitBtn">Send</button>
+</form>
+
+<!-- UI feedback elements -->
+<div id="statusMessage" class="status-message"></div>
+<div id="loadingOverlay">Sealing your capsule…</div>
+<div id="confetti"></div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    const UPLOAD_URL = "{% url 'process_secure_upload' %}";
+    // Pass the upload endpoint to JavaScript
+    var UPLOAD_URL = "{% url 'process_secure_upload' %}";
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<script src="{% static 'js/validation.js' %}"></script>
 <script src="{% static 'js/form.js' %}"></script>
-</body>
-</html>
+{% endblock %}

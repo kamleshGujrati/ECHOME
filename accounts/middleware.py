@@ -13,11 +13,13 @@ class CustomAuthMiddleware(MiddlewareMixin):
         request.custom_session = None
 
         cookie = request.COOKIES.get("XSESSIONID")
+        # print("middleware cookie:",cookie)
         if not cookie:
             print("No custom session cookie found")
             return
 
         session = validate_session_cookie(cookie, request)
+        # print("valid sessuion :",session)
         if not session:
             print("Invalid session cookie")
             return

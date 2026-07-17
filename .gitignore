@@ -7,11 +7,14 @@ __pycache__/
 *.pyd
 *.so
 
-# Virtual environment
+# Virtual Environments
 venv/
 .venv/
+env/
 ENV/
-*.env
+
+# Environment files
+.env
 .env.*
 
 # ============================
@@ -19,58 +22,84 @@ ENV/
 # ============================
 db.sqlite3
 db.sqlite3-journal
+
+# Celery
 celerybeat-schedule*
 celerybeat-schedule.*
+
+# Logs
 *.log
 *.pid
 
-# Django static files (collected)
+# Uploaded files
+media/
+
+# Collected static files
 staticfiles/
 staticroot/
-media/
+
+# Compressed files
 *.gz
 
-# Local settings & secrets
+# ============================
+# Secrets
+# ============================
 secret.json
 *.pem
 *.key
+*.crt
 *.cer
 
 # ============================
-# IDE / Editors
+# IDEs
 # ============================
-
-# PyCharm
 .idea/
 *.iml
 
-# VSCode
 .vscode/
 .code-workspace
 
+# ============================
 # Jupyter
+# ============================
 .ipynb_checkpoints/
 
 # ============================
-# System files
+# Build
+# ============================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ============================
+# OS files
 # ============================
 .DS_Store
 Thumbs.db
-
-# Windows dump files
-*.ps1
-*.bat
-*.cmd
-
-# ============================
-# Build / Packaging
-# ============================
-dist/
-build/
-*.egg-info/
-.eggs/
+desktop.ini
 
 # ============================
 # Git
 # ============================
 *.orig
+
+# ============================
+# Cache
+# ============================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ============================
+# Node (if ever used)
+# ============================
+node_modules/
+
+# ============================
+# Runtime exports
+# ============================
+exports/
+tmp/

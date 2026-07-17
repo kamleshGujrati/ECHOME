@@ -8,6 +8,10 @@ from django.conf import settings
 from django.utils import timezone
 from .models import UserSession  # your model from accounts/models.py
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Config (set these in settings.py)
 COOKIE_NAME = getattr(settings, "SESSION_COOKIE_NAME", "XSESSIONID")
 SECRET = getattr(settings, "SESSION_SECRET_KEY", settings.SECRET_KEY).encode()
@@ -54,26 +58,38 @@ def validate_cookie_token(cookie_value: str, request=None, delete_invalid=False)
     """
     Validate cookie token and return the UserSession instance (active), or None.
     """
+    
+    # print(cookie_value)
     parsed = parse_cookie_token(cookie_value)
+    
+    # print("parsed",parsed)
     if not parsed:
         return None
     session_key, expires_ts, sig = parsed
     payload = f"{session_key}:{expires_ts}"
     expected_sig = _sign(payload)
+    
+    logger.info(f"Validating cookie token: {payload}, Expected signature: {expected_sig}" )
     # use constant-time compare
     if not hmac.compare_digest(expected_sig, sig):
+        logger.warning(f"Invalid signature for session key {session_key}.")
         return None
 
     # check expiry timestamp
     now_ts = int(timezone.now().timestamp())
     if expires_ts < now_ts:
         # expired cookie
+        
+        # print("exp")
+        logger.warning(f"Session key {session_key} is expired.")
         return None
 
     # lookup DB session
     try:
         us = UserSession.objects.get(session_key=session_key, status="active")
     except UserSession.DoesNotExist:
+        logger.warning(f"Session key {session_key} not found or not active in DB.")
+        # print("no session in db")
         return None
 
     # optional: double-check DB expiry field if present
@@ -87,8 +103,10 @@ def validate_cookie_token(cookie_value: str, request=None, delete_invalid=False)
     # update last-seen fields if you have them
     try:
         us.save(update_fields=["device"])  # noop if unchanged; adjust as needed
+        
     except Exception:
-        pass
+        
+        logger.exception("Failed to update UserSession last-seen fields.")
 
     return us
 

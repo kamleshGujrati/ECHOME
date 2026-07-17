@@ -4,7 +4,7 @@ import logging
 from .models import ScheduledTaskLog
 from django.utils import timezone
 from ECHOME.SMTP import send_email_with_attachment
-from ECHOME.models import TimeCapsule ,file
+from ECHOME.models import TimeCapsule ,File as file 
 from datetime import timedelta
 from django.utils.timezone import now
 from ECHOME.BLOCK_CHAIN import ChainContract
@@ -14,6 +14,7 @@ from .utility_functions import utility_functions
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
+
 contract = ChainContract()  # contract object
 utility_client = utility_functions()
 ipfsClient = FilebaseIPFS()  # filebase object
@@ -45,7 +46,7 @@ def send_notification( ):
             return
         list_cid = expired_data["cids"]
 
-        print("list of cid",list_cid)
+        logger.info(f"list tyhere are {len(list_cid)} cids")
 
         if not list_cid:
             logger.info("No expired CIDs found")
@@ -53,98 +54,107 @@ def send_notification( ):
             log_entry.details = "No expired CIDs found"
             return
 
-        else:
-            for cid in list_cid:
-                try:
-                    cid = cid.decode('utf-8').strip('\x00').strip() if isinstance(cid,bytes) else cid.strip()
+        
+        for cid in list_cid:
+            try:
+                cid = cid.decode('utf-8').strip('\x00').strip() if isinstance(cid,bytes) else cid.strip()
 
-                    print("for cid",cid)
-                    capsules = TimeCapsule.objects.filter(cid=cid[-12:],status="pending")
-                    if capsules.count() == 1:
-                        capsule = capsules[0]
-                    else:
-                        current_time = now()
-                        capsule = None
-                        smallest_diff = None
-
-                        for record in capsules:
-                            time = record.storage_time + timedelta(seconds=record.unlock_time)
-                            diff = abs((time - current_time).total_seconds())
-
-                            if smallest_diff is None or diff < smallest_diff:
-                                smallest_diff = diff
-                                capsule = record
-
-                    data = {
-                        'cid': cid,
-                        'email': capsule.email,
-                        'decryption_pass': capsule.decryption_pass,
-                        'storage_time': capsule.storage_time,
-                        'file_ext': capsule.file_ext,
-                        'file_mime': capsule.file_mime,
-                    }
-                    capsule.status = "sent"
-
-                except TimeCapsule.DoesNotExist:
-                    print("capsule dta in db  not found")
-                    logger.error(f"Time capsule with CID {cid} not found.")
-                    ipfsClient.delete_file_by_cid(cid)
-                    continue
-
-                '''get file from ipfs and check it '''
-
-                print("getting file from ipfs")
-                file_dict = ipfsClient.get_file_by_cid(cid)
-
-                if not file_dict:
-                    logger.error(f"Failed to retrieve file for CID {cid}")
-                    print("file not found in filebase")
-                    capsule.status = "failed"
-                    capsule.save()
-                    continue
-
-                logger.info(f"File retrieved successfully for CID {cid}")
-
-
-                ''''check if file is encrypted or not '''
-
-                decrypted_file = utility_client.decrypt_aes256_cbc(file_dict["bytes"], data['decryption_pass'])
-                file_dict['bytes'] = decrypted_file
-
-                if not decrypted_file:
-                    logger.error(f"Decryption failed for CID {cid}")
-                    capsule.status = "failed"
-                    capsule.save()
-                    continue
-                '''file type and extension '''
-
-                file_dict['mime_type'] = data['file_mime']
-                file_dict['ext'] = data['file_ext']
-
-
-                '''send email with decrypted file '''
-                print("email sending")
-
-                diffrance = utility_client.detailed_time_difference(data['storage_time'])
-
-                email_sent = send_email_with_attachment(
-                    to_email=data['email'],
-                    file_info=file_dict,
-                    time=data['storage_time'],
-                    time_difference = diffrance,
-                )
-                print("email sent")
-                if not email_sent:
-                    logger.error(f"Failed to send email for CID {cid}")
-                    capsule.status = "failed"
-                    capsule.save()
-                    continue
+                print("for cid",cid)
+                capsules = TimeCapsule.objects.filter(cid=cid[-12:],status="pending")
+                if capsules.count() == 1:
+                    capsule = capsules[0]
                 else:
-                    logger.info(f"Email sent successfully for CID {cid}")
-                    capsule.status = "sent"
-                    capsule.save()
+                    current_time = now()
+                    capsule = None
+                    smallest_diff = None
 
-            log_entry.status = "completed"
+                    for record in capsules:
+                        time = record.storage_time + timedelta(seconds=record.unlock_time)
+                        diff = abs((time - current_time).total_seconds())
+
+                        if smallest_diff is None or diff < smallest_diff:
+                            smallest_diff = diff
+                            capsule = record
+
+                data = {
+                    'cid': cid,
+                    'email': capsule.email,
+                    'decryption_pass': capsule.decryption_pass,
+                    'storage_time': capsule.storage_time,
+                    'file_ext': capsule.file_ext,
+                    'file_mime': capsule.file_mime,
+                }
+                capsule.status = "sent"
+
+            except TimeCapsule.DoesNotExist:
+                print("capsule dta in db  not found")
+                logger.error(f"Time capsule with CID {cid} not found.")
+                ipfsClient.delete_file_by_cid(cid)
+                logger.info(f"Deleted file with CID {cid[:7]}... from IPFS")
+                continue
+
+            '''get file from ipfs and check it '''
+
+            logger.info(f"Retrieving file for CID {cid[:7]}... from IPFS")
+            
+            file_dict = ipfsClient.get_file_by_cid(cid)
+            
+            if not ipfsClient.delete_file_by_cid(cid):
+                logger.info(f"failed  Deleting  file with CID {cid[:7]}... from IPFS")
+            
+            else :
+                logger.info(f"Deleted file with CID {cid[:7]}... from IPFS")
+
+            if not file_dict:
+                logger.error(f"Failed to retrieve file for CID {cid[:7]}...")
+                logger.info("file not found in filebase")
+                capsule.status = "failed"
+                capsule.save()
+                continue
+
+            logger.info(f"File retrieved successfully for CID {cid[:7]}...")
+
+
+            ''''check if file is encrypted or not '''
+
+            decrypted_file = utility_client.decrypt_aes256_cbc(file_dict["bytes"], data['decryption_pass'])
+            file_dict['bytes'] = decrypted_file
+
+            if not decrypted_file:
+                logger.error(f"Decryption failed for CID {cid}")
+                capsule.status = "failed"
+                capsule.save()
+                continue
+            '''file type and extension '''
+
+            file_dict['mime_type'] = data['file_mime']
+            file_dict['ext'] = data['file_ext']
+
+
+            '''send email with decrypted file '''
+            
+            logger.info(f"Preparing to send email for CID {cid[:7]}... to {data['email'][:7]}...@gmail.com with file extension {data['file_ext']} and mime type {data['file_mime']}")
+
+            diffrance = utility_client.detailed_time_difference(data['storage_time'])
+
+            email_sent = send_email_with_attachment(
+                to_email=data['email'],
+                file_info=file_dict,
+                time=data['storage_time'],
+                time_difference = diffrance,
+            )
+            
+            if not email_sent:
+                logger.error(f"Failed to send email for CID {cid[:7]}...")
+                capsule.status = "failed"
+                capsule.save()
+                continue
+            else:
+                logger.info(f"Email sent successfully for CID {cid[:7]}...:{email_sent}")
+                capsule.status = "sent"
+                capsule.save()
+
+        log_entry.status = "completed"
 
         log_entry.details = "Task completed successfully"
 
@@ -153,6 +163,7 @@ def send_notification( ):
         log_entry.status = "failed"
         log_entry.details = str(e)
         print("error", e)
+        
     finally:
         log_entry.completed_at = timezone.now()
         log_entry.save()
@@ -191,11 +202,16 @@ def run_send_notification(self):
         raise self.retry(exc=exc, countdown=60)
 
 
-@shared_task(serializer="pickle")
+@shared_task(serializer="json")
+
 def do_uploads(file_id,capsule_id):
+    logger.info(f"{file_id}  , {capsule_id}")
     file_bytes = file.get_and_delete(file_id)  # get file bytes and delete from db
+    logger.info("got file bytes from db")
     cid = ipfsClient.upload_and_get_cid(file_bytes)  # upload file to IPFS and get CID
+    logger.info("files uploaded to ipfs")
     capsule = TimeCapsule.objects.get(id=capsule_id)
+    
     if not cid:
         capsule.status = "failed"
         capsule.save()
@@ -204,10 +220,11 @@ def do_uploads(file_id,capsule_id):
     capsule.cid = cid[-12:]
     #store cid to blockchain
     try:
-        contract.store_data(cid, capsule.unlock_time)
+        contract.store_data(cid, capsule.unlock_time)    
 
     except Exception as e:
         ipfsClient.delete_file_by_cid(cid)
         print("failed to store to blockchain :", e)
         capsule.status = "failed"
+        
     capsule.save()

@@ -7,6 +7,8 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+import dj_database_url
+
 # -----------------------------------------
 # BASE DIR & ENVIRONMENT VARIABLES
 # -----------------------------------------
@@ -49,7 +51,7 @@ FILEBASE_SECRET = os.getenv("FILEBASE_SECRET")
 BUCKET_NAME = os.getenv("BUCKET_NAME")
 
 # -----------------------------------------
-# SMTP EMAIL CONFIG (GMAIL or ANY)
+# SMTP EMAIL CONFIG (GMAIL )
 # -----------------------------------------
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
@@ -62,19 +64,19 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@example.com")
 
-GMAIL_PASSWORD = os.getenv("GMAIL_PASSWORD")  # legacy support
+GMAIL_PASSWORD = os.getenv("GMAIL_PASSWORD")  
 
-# -----------------------------------------
+
 # APPLICATIONS
-# -----------------------------------------
+
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    # Your apps
-    "accounts",     # custom User model + auth
+    # definded apps
+    "accounts",     # my custom User model + auth
     "worker",
     "ECHOME",
 ]
@@ -82,27 +84,27 @@ INSTALLED_APPS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# -----------------------------------------
+
 # MIDDLEWARE
-# -----------------------------------------
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # 'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',   #
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'accounts.middleware.CustomAuthMiddleware',
+    'accounts.middleware.CustomAuthMiddleware', # my cutome auth middleware 
 
 
 ]
 
 ROOT_URLCONF = "ECHOME.urls"
 
-# -----------------------------------------
+
 # TEMPLATES
-# -----------------------------------------
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -120,34 +122,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "ECHOME.wsgi.application"
 
-# -----------------------------------------
+
 # DATABASE
-# -----------------------------------------
-from urllib.parse import urlparse, parse_qsl
+#automatic db engine selection based on db url
 
-tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': tmpPostgres.path.lstrip('/'),
-        'USER': tmpPostgres.username,
-        'PASSWORD': tmpPostgres.password,
-        'HOST': tmpPostgres.hostname,
-        'PORT': 5432,
-        'OPTIONS': dict(parse_qsl(tmpPostgres.query)),
-    }
+DATABASES = DATABASES = {
+    "default": dj_database_url.parse(
+        os.getenv("DB_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
 # -----------------------------------------
 # AUTHENTICATION & CUSTOM USER MODEL
 # -----------------------------------------
+
+
 AUTH_USER_MODEL = "accounts.User"
 
 
@@ -159,7 +149,7 @@ AUTHENTICATION_BACKENDS = [
 
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "optional"   # set "mandatory" in production
+ACCOUNT_EMAIL_VERIFICATION = "optional"   
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
 
@@ -185,6 +175,7 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+
 # -----------------------------------------
 # STATIC FILES
 # -----------------------------------------
@@ -192,49 +183,43 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
-# -----------------------------------------
-# SCHEDULER CONFIG
-# -----------------------------------------
-# SCHEDULER_CONFIG = {
-#     "executors": {
-#         "default": {"type": "threadpool", "max_workers": 10},
-#         "processpool": {"type": "processpool", "max_workers": 5},
-#     },
-#     "job_defaults": {
-#         "coalesce": False,
-#         "max_instances": 3,
-#     },
-# }
-#
-# APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
-# -----------------------------------------
-# LOGGING
-# -----------------------------------------
+# loggging 
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "file": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": "scheduler.log",
+
+    "formatters": {
+        "standard": {
+            "format": "[{asctime}] {levelname} {name}: {message}",
+            "style": "{",
         },
     },
-    "loggers": {
-        "worker": {
-            "handlers": ["file"],
-            "level": "DEBUG",
-            "propagate": True,
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
         },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "project.log",
+            "formatter": "standard",
+        },
+    },
+
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
     },
 }
 
+
 # -----------------------------------------
-# SECURITY (turn ON in production)
+# SECURITY 
 # -----------------------------------------
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
@@ -254,12 +239,14 @@ CELERY_ACCEPT_CONTENT = ["json"]
 # Beat schedule — run send_notification every 60 seconds
 from celery.schedules import crontab
 
+
 CELERY_BEAT_SCHEDULE = {
     "check-expired-capsules-every-1-min": {
         "task": "worker.tasks.run_send_notification",
         "schedule": 60.0,
     },
 }
+
 LOGIN_URL = 'account:login'
 LOGIN_REDIRECT_URL = 'homepage'
 LOGOUT_REDIRECT_URL = 'account:login'
@@ -281,6 +268,10 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+
+# cookie and session settings
+
+
 SESSION_SECRET_KEY = os.getenv("SESSION_SECRET_KEY")
 SESSION_COOKIE_NAME ="XSESSIONID"
 CUSTOM_SESSION_COOKIE = SESSION_COOKIE_NAME
@@ -288,13 +279,3 @@ SESSION_TTL_SECONDS = 7 * 24 * 3600  # 7 days
 
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
-
-
-CELERY_ACCEPT_CONTENT = [ 'json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-
-REDIS_URL = os.getenv("REDIS_URL")
-
-CELERY_BROKER_URL = f"{REDIS_URL}"
-CELERY_RESULT_BACKEND = f"{REDIS_URL}"

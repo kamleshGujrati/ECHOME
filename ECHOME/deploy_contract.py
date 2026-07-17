@@ -7,9 +7,11 @@ from django.conf import settings
 # --------------------------
 # Django setup
 # --------------------------
+
 # os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ECHOME.settings')
 
 # Load credentials from Django settings
+
 PRIVATE_KEY = settings.PRIVATE_KEY
 WALLET_ADDRESS = settings.WALLET_ADDRESS
 ENDPOINT = settings.RPC_ENDPOINT

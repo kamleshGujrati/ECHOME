@@ -2,19 +2,22 @@ from datetime import timedelta
 from django.http import JsonResponse
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
-from .models import TimeCapsule , file
-# from .IPFS import FilebaseIPFS
-# from .BLOCK_CHAIN import ChainContract
+from .models import TimeCapsule , File
+
 from django.core.exceptions import ValidationError
 from accounts.decorators import custom_login_required
 from django.shortcuts import render ,redirect , get_object_or_404
 from worker.utility_functions import utility_functions
 from accounts.models import User
 from worker.tasks import do_uploads
-# client = utility_functions()
-#
-# contract = ChainContract()  # Initialize the contract
-# ipfs = FilebaseIPFS()
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+
 
 def homepage(request):
     return render(request, 'index.html')
@@ -32,6 +35,9 @@ def process_secure_upload(request):
         # Get the uploaded file object
         file_bytes = request.FILES.get('encrypted_file').read()
         if not file_bytes:
+            
+            logger.info("No file was uploaded")
+            
             raise ValidationError("No file was uploaded")
 
         # Get form data
@@ -43,14 +49,22 @@ def process_secure_upload(request):
         mime= request.POST.get('file_mime')
 
 
-        if TimeCapsule.total_capsules_by_user(user,"pending").count() >= 3:
-            raise ValidationError("You have reached the maximum limit of 3 time capsules.")
+        # if TimeCapsule.total_capsules_by_user(user,"pending").count() >= 3:
+            
+        #     logger.info(f"User {user.email} has reached the maximum limit of 3 time capsules.")
+            
+        #     raise ValidationError("You have reached the maximum limit of 3 time capsules.")
 
-        # cid = ipfs.upload_and_get_cid(file_bytes)  # upload file to IPFS and get CID
+        
 
         if not all([unlock_time, email, decryption_password]):
+            
+            logger.info("All fields (unlock_time, email, password) are required")
+            
             raise ValidationError("All fields (unlock_time, email, password) are required")
-        print("got all data ")
+        
+        logger.info(f"Processing secure upload for user {user.email} with unlock_time {unlock_time}, email {email}, and file extension {ext}")
+        logger.info("got all data ")
 
         '''
         
@@ -59,10 +73,10 @@ def process_secure_upload(request):
          '''
 
         # try:
-        #     print("storing to blockchain")
+        #     logger.info("storing to blockchain")
         #     contract.store_data(cid,unlock_time)
         # except Exception as e:
-        #     print("failed to store to blockchain")
+        #     logger.error("failed to store to blockchain")
         #     ipfs.delete_file_by_cid(cid)
         #     raise ValidationError("Failed to store data on the blockchain") from e
 
@@ -81,12 +95,22 @@ def process_secure_upload(request):
             file_ext = ext,
             file_mime = mime
         )
-        file_id=file.save(file_bytes)
+        
+        logger.info(f"Creating time capsule for user {user.email}")
+        
+        file_id=File.objects.create(file_data=file_bytes).id
+        
+        logger.info(f"Scheduling upload for file ID {file_id} and time capsule ID {capsule.id}")
+        
+            
         do_uploads.delay(file_id,capsule.id)
 
+        logger.info(f"Time capsule created successfully for user {user.email}")
+        
         return JsonResponse("stored successfully", safe=False, status=200)
 
     except Exception as e:
+        logger.error(f"Error occurred while processing secure upload for user {user.email}: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
 
 
@@ -107,6 +131,7 @@ def dashboard(request):
 @custom_login_required
 def delete_time_capsule(request, id ):
     if request.custom_user.user_type != 'dev':
+        logger.warning(f"User {request.custom_user.email} attempted to delete time capsule {id} without permission.")
         raise PermissionDenied
     msg = get_object_or_404(TimeCapsule, id=id, email=request.custom_user.email)
     msg.status = 'deleted'
@@ -126,10 +151,11 @@ def total_capsules_api(request):
             "deleted": TimeCapsule.objects.filter(status="deleted").count(),
             "sent": TimeCapsule.objects.filter(status="sent").count(),
         }
-        print(capsule_data)
+        logger.info(f"Total capsules data: {capsule_data}")
 
         return JsonResponse({'total_capsules': capsule_data}, status=200)
     except Exception as e:
+        logger.error(f"Error occurred while fetching total capsules data: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
 
 
