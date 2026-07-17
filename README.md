@@ -265,51 +265,6 @@ erDiagram
 ```
 ---
 
-# Project Structure 
-
-ECHOME/
-├── manage.py
-├── ECHOME/                     # Main Django app (project root)
-│   ├── asgi.py
-│   ├── wsgi.py
-│   ├── settings.py
-│   ├── urls.py
-│   ├── views.py
-│   ├── models.py               # TimeCapsule, File
-│   ├── SMTP.py
-│   ├── BLOCK_CHAIN.py          # ChainContract class
-│   ├── IPFS.py                 # FilebaseIPFS class
-│   ├── contract_info.json      # Deployed contract ABI & address
-│   ├── deploy_contract.py
-│   └── contract.sol            # Solidity source (not shown)
-├── accounts/                   # Custom authentication app
-│   ├── models.py               # User, UserSession, failedLoginAttempt
-│   ├── views.py                # signup, login, logout
-│   ├── forms.py
-│   ├── auth_backend.py
-│   ├── middleware.py
-│   ├── decorators.py
-│   ├── session.py
-│   ├── signals.py
-│   └── urls.py
-├── worker/                     # Celery tasks
-│   ├── tasks.py                # do_uploads, run_send_notification
-│   ├── models.py               # ScheduledTaskLog
-│   ├── utility_functions.py
-│   └── celery_app.py           # Celery app declaration
-├── templates/                  # HTML templates
-│   ├── base.html
-│   ├── dashboard.html
-│   ├── form.html
-│   ├── index.html
-│   ├── mail.html
-│   └── accounts/               # login/signup templates
-├── static/                     # CSS, JS
-│   ├── css/main.css
-│   └── js/form.js / validation.js
-├── .env                        # Environment variables
-└── requirements.txt            # Python dependencies
-
 
 
 
