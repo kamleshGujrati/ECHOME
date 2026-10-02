@@ -13,6 +13,7 @@ import dj_database_url
 # BASE DIR & ENVIRONMENT VARIABLES
 # -----------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 env_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path=env_path, override=True)
 
@@ -76,7 +77,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     # definded apps
-    "accounts",     # my custom User model + auth
+    "accounts",     # custom User model + auth
     "worker",
     "ECHOME",
 ]
@@ -126,13 +127,14 @@ WSGI_APPLICATION = "ECHOME.wsgi.application"
 # DATABASE
 #automatic db engine selection based on db url
 
-DATABASES = DATABASES = {
+DATABASES = {
     "default": dj_database_url.parse(
         os.getenv("DB_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
         conn_max_age=600,
         conn_health_checks=True,
     )
 }
+
 # -----------------------------------------
 # AUTHENTICATION & CUSTOM USER MODEL
 # -----------------------------------------
@@ -237,7 +239,7 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["json"]
 
 # Beat schedule — run send_notification every 60 seconds
-from celery.schedules import crontab
+# from celery.schedules import crontab
 
 
 CELERY_BEAT_SCHEDULE = {

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-from web3 import Web3
-import time
+from web3 import Web3 
+
+import time 
+
 from django.conf import settings
+
 import os
 
 import logging
@@ -11,6 +14,7 @@ logger = logging.getLogger(__name__)
 from web3.exceptions import TimeExhausted as txn_timeout
 
 class ChainContract:
+    
     def __init__(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         
@@ -34,7 +38,12 @@ class ChainContract:
         # # print(f"Chain ID: {self.w3.eth.chain_id}")
         
         logger.info(f"Connected to blockchain: {self.w3.is_connected()}, Current block: {self.w3.eth.block_number}, Chain ID: {self.w3.eth.chain_id}")
+             
+    
+    def store_data(self, cid, delay_seconds, done_retry=False):
         
+        return self.store_data_to_blockchain(cid, delay_seconds, done_retry=False)
+    
      
      
     def convertion2byte(self, data):
@@ -49,7 +58,7 @@ class ChainContract:
             return data.decode('utf-8')
         return data 
 
-    def store_data(self, cid, delay_seconds, done_retry=False):
+    def store_data_to_blockchain(self, cid, delay_seconds, done_retry=False):
         try:
            
             cid_bytes = self.convertion2byte(cid)
@@ -75,11 +84,11 @@ class ChainContract:
             decoded_input = self.contract.decode_function_input(tx['input'])
             function_args = decoded_input[1]
             
-            print(f"Stored data: '{self.convert2str(cid_bytes)[0:7]}...' with unlock time: {delay_seconds} seconds")
+            logger.info(f"Stored data: '{self.convert2str(cid_bytes)[0:7]}...' with unlock time: {delay_seconds} seconds")
 
             logger.info("--- End of Confirmation ---\n")
 
-            return 
+            return  self.w3.to_hex(tx_hash)
         
         except txn_timeout :
             logger.error(f"Timeout error ... letting txn to  get mined completely ")
@@ -165,43 +174,45 @@ class ChainContract:
                 return self.deleteExpired(expired_id,done_retry=True)
                      
     
-def test_contract():
+# def test_contract():
     
-    try:
-        import random
+#     try:
+#         import random
         
-        import sys
+#         import sys
         
-        import django
+#         import django
         
         
-        sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ECHOME.settings')
-        django.setup() 
+#         sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+#         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ECHOME.settings')
+#         django.setup() 
         
-        contract = ChainContract()
-        temp_data = [ f"testingfor{random.randint(10,40)}"  for _ in range(10)  ]
+#         contract = ChainContract()
+#         temp_data = [ f"testingfor{random.randint(10,40)}"  for _ in range(10)  ]
         
-        for case_no in range(1,4):
+#         for case_no in range(1,4):
             
             
-            data=temp_data[case_no-1]
+#             data=temp_data[case_no-1]
             
-            print(f"for case no. -:{case_no} " ,f"data is : {data} " , f"unlock time is : {int(data[10:])} ")
+#             print(f"for case no. -:{case_no} " ,f"data is : {data} " , f"unlock time is : {int(data[10:])} ")
             
-            contract.store_data( data , int(data[10:]))
+#             contract.store_data( data , int(data[10:]))
             
-            print(f"waiting for {int(data[10:])} seconds to check if data is expired and retrievable")
+#             print(f"waiting for {int(data[10:])} seconds to check if data is expired and retrievable")
             
-            time.sleep(int(data[10:])+60)
+#             time.sleep(int(data[10:])+60)
             
-            print(contract.get_expired_data())
+#             print(contract.get_expired_data())
             
         
-    except  Exception as e :
-        logger.error(f"Error in test_contract: {str(e)}") 
+#     except  Exception as e :
+#         logger.error(f"Error in test_contract: {str(e)}") 
           
         
-  # Initialize the contract instance at module level to ensure it's ready for use in tasks
-# test_contract()           
+#   # Initialize the contract instance at module level to ensure it's ready for use in tasks
+# # test_contract()           
+  
+  
             
