@@ -73,7 +73,7 @@ class ChainContract:
             })
 
             signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash,180)
 
             logger.info("\n--- Storage Confirmation ---")
@@ -157,7 +157,7 @@ class ChainContract:
             })
             
             signed_tx = self.w3.eth.account.sign_transaction(tx, self.private_key)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash,120)
             logger.info(f" expired CIDs deleted")
             return receipt
