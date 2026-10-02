@@ -30,10 +30,13 @@ redis
 ###############################################
 
 dj-database-url
+ 
+psycopg2 # driver for postgres
 
 ###############################################
 # Blockchain / Web3
 ###############################################
+
 web3
 eth-account
 eth-hash

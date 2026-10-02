@@ -40,7 +40,7 @@ class ChainContract:
         logger.info(f"Connected to blockchain: {self.w3.is_connected()}, Current block: {self.w3.eth.block_number}, Chain ID: {self.w3.eth.chain_id}")
              
     
-    def store_data(self, cid, delay_seconds, done_retry=False):
+    def store_data(self, cid, delay_seconds):
         
         return self.store_data_to_blockchain(cid, delay_seconds, done_retry=False)
     
@@ -174,45 +174,7 @@ class ChainContract:
                 return self.deleteExpired(expired_id,done_retry=True)
                      
     
-# def test_contract():
-    
-#     try:
-#         import random
-        
-#         import sys
-        
-#         import django
-        
-        
-#         sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-#         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'ECHOME.settings')
-#         django.setup() 
-        
-#         contract = ChainContract()
-#         temp_data = [ f"testingfor{random.randint(10,40)}"  for _ in range(10)  ]
-        
-#         for case_no in range(1,4):
-            
-            
-#             data=temp_data[case_no-1]
-            
-#             print(f"for case no. -:{case_no} " ,f"data is : {data} " , f"unlock time is : {int(data[10:])} ")
-            
-#             contract.store_data( data , int(data[10:]))
-            
-#             print(f"waiting for {int(data[10:])} seconds to check if data is expired and retrievable")
-            
-#             time.sleep(int(data[10:])+60)
-            
-#             print(contract.get_expired_data())
-            
-        
-#     except  Exception as e :
-#         logger.error(f"Error in test_contract: {str(e)}") 
-          
-        
-#   # Initialize the contract instance at module level to ensure it's ready for use in tasks
-# # test_contract()           
+         
   
   
             
