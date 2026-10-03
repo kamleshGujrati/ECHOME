@@ -14,9 +14,9 @@ requests
 ###############################################
 # Deployment Servers
 ###############################################
-waitress  #windows
+# waitress  #windows
 gunicorn
-whitenoise  # windows
+# whitenoise  # windows
 
 ###############################################
 # Celery + Redis
@@ -30,8 +30,8 @@ redis
 ###############################################
 
 dj-database-url
- 
-psycopg2 # driver for postgres
+
+psycopg
 
 ###############################################
 # Blockchain / Web3
