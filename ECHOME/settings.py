@@ -231,9 +231,25 @@ SESSION_COOKIE_HTTPONLY = True
 SECURE_SSL_REDIRECT = False
 X_FRAME_OPTIONS = "DENY"
 
-# Celery / Redis
+# Celery / Redis-----------------------------------------------------
+
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+
+if CELERY_BROKER_URL.startswith("rediss://"):
+    # If using rediss://, ensure that SSL is enabled for Redis connections
+    CELERY_BROKER_USE_SSL = {
+        "ssl_cert_reqs": 'required'  # certificate verification 
+    } 
+
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+
+if CELERY_RESULT_BACKEND.startswith("rediss://"):
+  
+    CELERY_RESULT_BACKEND_USE_SSL = {
+        "ssl_cert_reqs": 'required' 
+    }
+
+
 
 # Optional: json serialization to avoid pickle
 CELERY_TASK_SERIALIZER = "json"
@@ -250,6 +266,8 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 60.0,
     },
 }
+
+#----------------------------------------------------------------------------------------------
 
 LOGIN_URL = 'account:login'
 LOGIN_REDIRECT_URL = 'homepage'
