@@ -28,13 +28,11 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 
 
 # Allowed hosts
-# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS")
-custom_host = os.getenv("CUSTOM_HOST")
 
 ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    f"{custom_host}",
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "localhost").split(",")
+    if host.strip()
 ]
 
 
@@ -99,7 +97,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',   #
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'accounts.middleware.CustomAuthMiddleware', # my cutome auth middleware 
+    'accounts.middleware.CustomAuthMiddleware', # my cutom auth middleware 
 
 
 ]
