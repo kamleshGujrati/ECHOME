@@ -16,7 +16,7 @@ requests
 ###############################################
 # waitress  #windows
 gunicorn
-# whitenoise  # windows
+whitenoise  
 
 ###############################################
 # Celery + Redis
