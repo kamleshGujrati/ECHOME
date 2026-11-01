@@ -232,14 +232,22 @@ X_FRAME_OPTIONS = "DENY"
 
 # Celery / Redis-----------------------------------------------------
 
+REDIS_HOST=os.getenv("REDIS_HOST","127.0.0.1")
+
+REDIS_PORT=os.getenv("REDIS_PORT","6379")
+
+REDIS_PASSWORD=os.getenv("REDIS_PASSWORD","") + "@"
+
+
+
 CELERY_BROKER_URL = os.getenv(
     "CELERY_BROKER_URL",
-    "redis://localhost:6379/0"
+    f"redis://{REDIS_PASSWORD}{REDIS_HOST}:{REDIS_PORT}/0"
 )
 
 CELERY_RESULT_BACKEND = os.getenv(
     "CELERY_RESULT_BACKEND",
-    "redis://localhost:6379/0"
+    f"redis://{REDIS_PASSWORD}{REDIS_HOST}:{REDIS_PORT}/1"
 )
 
 if CELERY_BROKER_URL.startswith("rediss://"):

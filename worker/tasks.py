@@ -220,11 +220,13 @@ def do_uploads(file_id,capsule_id):
     capsule.cid = cid[-12:]
     #store cid to blockchain
     try:
-        contract.store_data(cid, capsule.unlock_time)    
+        contract.store_data(cid, capsule.unlock_time)  
+        
+        logger.info(f"stored to blockchain with cid {cid} and unlock time {capsule.unlock_time}")  
 
     except Exception as e:
         ipfsClient.delete_file_by_cid(cid)
         print("failed to store to blockchain :", e)
         capsule.status = "failed"
-        
+        capsule.save()
     capsule.save()
