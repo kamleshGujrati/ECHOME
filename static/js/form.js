@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const audioInputContainer = document.getElementById('audioInputContainer');
     const recordBtn = document.getElementById('recordBtn');
     const audioPlayback = document.getElementById('audioPlayback');
-    const audioDataInput = document.getElementById('audioData');
     const form = document.getElementById('timeCapsuleForm');
     const submitBtn = document.getElementById('submitBtn');
     const confettiContainer = document.getElementById('confetti');
@@ -222,7 +221,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const encoder = new TextEncoder();
                 dataBytes = encoder.encode(text);
             } else if (messageType === 'audio') {
-                if (!recordedAudioBlob) throw new Error('Please record an audio message');
+                if (!recordedAudioBlob || recordedAudioBlob.size === 0) {
+                    throw new Error('Please record an audio message');
+                }
                 fileType = recordedAudioBlob.type || 'audio/webm';
                 fileExt = fileType.includes('ogg') ? '.ogg' : '.webm';
                 dataBytes = new Uint8Array(await recordedAudioBlob.arrayBuffer());
@@ -260,7 +261,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (response.ok) {
                 showStatusMessage('✨ Your time capsule has been sealed!', 'success');
                 form.reset();
-                if (audioPlayback) audioPlayback.style.display = 'none';
+                recordedAudioBlob = undefined;
+                if (recordedAudioObjectUrl) {
+                    URL.revokeObjectURL(recordedAudioObjectUrl);
+                    recordedAudioObjectUrl = undefined;
+                }
+                if (audioPlayback) {
+                    audioPlayback.removeAttribute('src');
+                    audioPlayback.load();
+                    audioPlayback.style.display = 'none';
+                }
                 createConfetti();
             } else {
                 throw new Error(result.error || 'Failed to seal time capsule');
