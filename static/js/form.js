@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
+    let recordedAudioBlob;
+    let recordedAudioObjectUrl;
 
     // toggle text/audio
     inputTypeSelect.addEventListener('change', () => {
@@ -66,18 +68,29 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!isRecording) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
+                const supportedMimeType = [
+                    'audio/webm;codecs=opus',
+                    'audio/webm',
+                    'audio/ogg;codecs=opus'
+                ].find(type => MediaRecorder.isTypeSupported(type));
+
+                mediaRecorder = supportedMimeType
+                    ? new MediaRecorder(stream, { mimeType: supportedMimeType })
+                    : new MediaRecorder(stream);
                 audioChunks = [];
 
                 mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const arrayBuffer = await audioBlob.arrayBuffer();
-                    audioDataInput.arrayBuffer = arrayBuffer; // store raw bytes for encryption
+                    const mimeType = mediaRecorder.mimeType || audioChunks[0]?.type || 'audio/webm';
+                    recordedAudioBlob = new Blob(audioChunks, { type: mimeType });
 
-                    const audioURL = URL.createObjectURL(audioBlob);
-                    audioPlayback.src = audioURL;
+                    if (recordedAudioObjectUrl) {
+                        URL.revokeObjectURL(recordedAudioObjectUrl);
+                    }
+                    recordedAudioObjectUrl = URL.createObjectURL(recordedAudioBlob);
+                    audioPlayback.src = recordedAudioObjectUrl;
                     audioPlayback.style.display = 'block';
+                    audioPlayback.load();
                     stream.getTracks().forEach(track => track.stop());
                 };
 
@@ -209,10 +222,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const encoder = new TextEncoder();
                 dataBytes = encoder.encode(text);
             } else if (messageType === 'audio') {
-                if (!audioDataInput.arrayBuffer) throw new Error('Please record an audio message');
-                fileType = 'audio/webm';
-                fileExt = '.webm';
-                dataBytes = new Uint8Array(audioDataInput.arrayBuffer);
+                if (!recordedAudioBlob) throw new Error('Please record an audio message');
+                fileType = recordedAudioBlob.type || 'audio/webm';
+                fileExt = fileType.includes('ogg') ? '.ogg' : '.webm';
+                dataBytes = new Uint8Array(await recordedAudioBlob.arrayBuffer());
             } else {
                 throw new Error('Invalid message type');
             }
@@ -224,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = new FormData();
             formData.append('email', email);
             formData.append('unlock_time', unlockTimeSeconds.toString());
-            formData.append('password', encryptionPassword);
+            formData.append('decryption_password', encryptionPassword);
             formData.append('file_mime', fileType);
             formData.append('file_ext', fileExt);
             formData.append('encrypted_file', blob, 'encrypted_message.dat');
