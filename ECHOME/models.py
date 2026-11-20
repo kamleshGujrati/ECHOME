@@ -79,35 +79,17 @@ class File(models.Model):
 
     class Meta:
         db_table = 'file_storage'
-        
 
-    def __str__(self):
-        
-        return self.id
-    
-    @classmethod
-    def get_and_delete(cls,file_id):
-        try: 
-            
-            file_obj= cls.objects.filter(id=file_id).first()
-            
-            file_bytes= file_obj.file_data
-            
-            file_obj.delete()
-            
-            logger.info(f"File with ID {file_id} deleted.")
-            
+    def store(file_bytes):
+        f = file(file_data=file_bytes)
+        f.save()
+        return f.id
+
+    def get_and_delete(file_id):
+        try:
+            f = file.objects.get(id=file_id)
+            file_bytes = f.file_data
+            f.delete()
             return file_bytes
-        
-        except File.DoesNotExist:
-            logger.warning(f"File with ID {file_id} not found.")
+        except file.DoesNotExist:
             return None
-        
-    @classmethod
-    def saveFile(cls,file_bytes: bytes):
-        file_obj= cls.objects.create(file_data=file_bytes)
-        logger.info(f"File with ID {file_obj.id} saved.")
-        return file_obj.id
-        
-    
-    

@@ -30,7 +30,7 @@ load_dotenv(dotenv_path=BASE_DIR / "deployment" / "redis.env", override=True)  #
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-default-key")
 
 # Debug mode
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = os.getenv("DEBUG", "False") 
 
 
 # Allowed hosts
@@ -97,7 +97,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',   #
@@ -192,6 +192,7 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 
@@ -320,3 +321,13 @@ SESSION_TTL_SECONDS = 7 * 24 * 3600  # 7 days
 
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
+
+
+CELERY_ACCEPT_CONTENT = [ 'json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+REDIS_URL = os.getenv("REDIS_URL")
+
+CELERY_BROKER_URL = f"{REDIS_URL}"
+CELERY_RESULT_BACKEND = f"{REDIS_URL}"

@@ -202,8 +202,7 @@ def run_send_notification(self):
         raise self.retry(exc=exc, countdown=60)
 
 
-@shared_task(serializer="json")
-
+@shared_task
 def do_uploads(file_id,capsule_id):
     logger.info(f"{file_id}  , {capsule_id}")
     file_bytes = file.get_and_delete(file_id)  # get file bytes and delete from db

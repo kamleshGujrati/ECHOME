@@ -58,10 +58,7 @@ def process_secure_upload(request):
             file_ext=cleaned_data['file_ext'],
             file_mime=cleaned_data['file_mime']
         )
-
-        logger.info(f"Scheduling upload for file ID {file_id} and time capsule ID {capsule.id}")
-        
-            
+        file_id=file.store(file_bytes)
         do_uploads.delay(file_id,capsule.id)
 
         logger.info(f"Time capsule created successfully for user {capsule.email}")
