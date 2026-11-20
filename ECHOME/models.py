@@ -4,6 +4,9 @@ from django.db import models
 from django.utils import timezone
 from accounts.models import User
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Status(models.TextChoices):
     PENDING = 'pending', 'Pending'
@@ -36,19 +39,42 @@ class TimeCapsule(models.Model):
     file_mime = models.CharField(max_length=20, default='text/plain')
     class Meta:
         db_table = 'TimeCapsule'
-
-    def total_capsules_by_user(user,status=None):
+    
+    @classmethod
+    def total_capsules_by_user(cls,user,status=None):
         if not status:
-            return TimeCapsule.objects.filter(user=user).values(
+            return cls.objects.filter(user=user).values(
                 "id","email","file_mime","status","unlock_time","storage_time")
         else:
-            return TimeCapsule.objects.filter(user=user,status=status).values(
+            return cls.objects.filter(user=user,status=status).values(
                 "id", "email", "file_mime", "status", "unlock_time", "storage_time")
 
 
+    @classmethod
+    def get_capsule_by_id(cls, capsule_id):
+        try:
+            return cls.objects.get(id=capsule_id)
+        except cls.DoesNotExist:
+            logger.warning(f"Time capsule with ID {capsule_id} not found.")
+            return None
+        
+    @classmethod 
+    def create_capsule(cls, user, email, cid, decryption_pass, unlock_time, file_ext, file_mime):
+        
+        capsule = cls.objects.create(
+            user=user,
+            email=email,
+            cid=cid,
+            decryption_pass=decryption_pass,
+            unlock_time=unlock_time,
+            file_ext=file_ext,
+            file_mime=file_mime
+        )
+        logger.info(f"Time capsule created successfully for user {user.email}")
+        return capsule
 
-
-class file(models.Model):
+class File(models.Model):
+    
     file_data = models.BinaryField()
 
     class Meta:

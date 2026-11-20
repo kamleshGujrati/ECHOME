@@ -1,7 +1,7 @@
 # accounts/signals.py
 from django.dispatch import Signal, receiver
 
-# Django 4+ — no providing_args
+
 user_logged_in = Signal()
 user_logged_out = Signal()
 

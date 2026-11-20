@@ -10,6 +10,10 @@ from .session import create_session_for_user, revoke_session_by_cookie , parse_c
 from .signals import user_logged_in, user_logged_out
 from .forms import RegisterForm, LoginForm  # if you have these; else use request.POST
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 COOKIE_NAME = getattr(settings, "SESSION_COOKIE_NAME", "XSESSIONID")
 COOKIE_TTL = getattr(settings, "SESSION_TTL_SECONDS", 7 * 24 * 3600)
 
@@ -18,6 +22,9 @@ def signup(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             cd = form.cleaned_data
+            
+            # print(cd)
+            
             u = User(
                 username = cd["username"],
                 email = cd.get("email", ""),
@@ -26,16 +33,32 @@ def signup(request):
             # hash password field into password_hash attribute expected by your model
             u.password_hash = make_password(cd["password"])
             u.save()
+            
+            # print("user saved ",u)
+            
             # Auto-login: create session
             token, us = create_session_for_user(request, u)
+            
+            # print (token)
+            
             resp = redirect("homepage")
+            
             resp.set_cookie(COOKIE_NAME, token, httponly=True, samesite="Lax", max_age=COOKIE_TTL, secure=not settings.DEBUG)
+            
+            # print("cookies sent :",resp.cookies)
             # fire signal
             user_logged_in.send(sender=None, user=u, request=request, session=us)
+            
+            logger.info(f"New user {u.email} signed up and logged in.")
+            
+            # print (resp )
+            
             return resp
+        
         return render(request, "accounts/signup.html", {"form": form})
     else:
         form = RegisterForm()
+        logger.info("Rendering signup page with empty form.")
     return render(request, "accounts/signup.html", {"form": form})
 
 def login_view(request):
@@ -47,6 +70,7 @@ def login_view(request):
             # find user by email or username (use your backend logic)
             user = User.objects.filter(email__iexact=identifier).first() or User.objects.filter(username__iexact=identifier).first()
             if not user:
+                logger.warning(f"Login attempt failed for identifier {identifier}: user not found.")
                 form.add_error(None, "Invalid credentials")
                 return render(request, "accounts/login.html", {"form": form})
 
@@ -55,11 +79,13 @@ def login_view(request):
                 #  failed attempt
                 user.increment_attempts()
                 faildedLoginAttempt.objects.create(user=user, user_agent=request.META.get("USER_AGENT",''), ip_address=request.META.get('REMOTE_ADDR', ''))
+                logger.warning(f"Login attempt failed for user {user.email}: invalid credentials.")
                 form.add_error(None, "Invalid credentials")
 
                 return render(request, "accounts/login.html", {"form": form})
             # check if frozen
             if user.is_frozen():
+                logger.warning(f"Login attempt failed for user {user.email}: account is frozen.")
                 form.add_error(None, "Account is temporarily frozen due to multiple failed login attempts. Please try again later.")
                 return render(request, "accounts/login.html", {"form": form})
             # successful login
@@ -72,6 +98,7 @@ def login_view(request):
 
             # fire login signal
             user_logged_in.send(sender=None, user=user, request=request, session=us)
+            logger.info(f"User {user.email} logged in successfully.")
             return resp
     else:
         form = LoginForm()
@@ -86,6 +113,7 @@ def logout_view(request):
         if cookie_val:
             # attempt to map cookie to session
             # parse cookie via helpers (we can try fetching UserSession)
+            logger.info("Attempting to map cookie to session.")
 
             parsed = parse_cookie_token(cookie_val)
             if parsed:
@@ -94,6 +122,7 @@ def logout_view(request):
                 session = UserSession.objects.filter(session_key=session_key).first()
             # mark revoked
             revoke_session_by_cookie(cookie_val)
+            logger.info("Revoked session by cookie. for user: {}".format(session.user.email if session else "Unknown"))
     finally:
         # fire logout signal
         if session:
@@ -101,4 +130,5 @@ def logout_view(request):
 
     resp = redirect("homepage")
     resp.delete_cookie(COOKIE_NAME)
+    logger.info("Deleted session cookie.")
     return resp

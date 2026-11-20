@@ -1,82 +1,30 @@
-<!DOCTYPE html>
-{% load static %}
+{% extends "base.html" %}
 
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — EchoMe</title>
+{% block title %}Login{% endblock %}
 
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}">
-    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-
-<nav class="navbar">
-    <div class="nav-container">
-        <a href="{% url 'homepage' %}" class="logo">
-            <i class="fas fa-hourglass-half"></i> EchoMe
-        </a>
-    </div>
-</nav>
-
-<section class="auth-container">
-    <div class="auth-box">
-        <h2>Welcome Back</h2>
-
-        <!-- server-side global error -->
+{% block content %}
+<div class="auth-box">
+    <h1>Login</h1>
+    <form method="post">
+        {% csrf_token %}
         {% if form.non_field_errors %}
-        <div class="input-error">{{ form.non_field_errors.0 }}</div>
+            <div class="error">{{ form.non_field_errors }}</div>
         {% endif %}
 
-        <form id="loginForm" method="POST" action="{% url 'accounts:login' %}" class="auth-form">
-            {% csrf_token %}
+        <label for="{{ form.identifier.id_for_label }}">Username or Email</label>
+        {{ form.identifier }}
+        {% if form.identifier.errors %}
+            <div class="error">{{ form.identifier.errors }}</div>
+        {% endif %}
 
-            <div class="auth-group">
-                <label>Username or Email</label>
-                <input type="text"
-                       name="identifier"
-                       id="identifier"
-                       placeholder="Username or Email"
-                       value="{{ form.identifier.value|default:'' }}"
-                       required>
-                {% if form.identifier.errors %}
-                <small class="input-error">{{ form.identifier.errors.0 }}</small>
-                {% endif %}
-            </div>
+        <label for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+            <div class="error">{{ form.password.errors }}</div>
+        {% endif %}
 
-            <div class="auth-group">
-                <label>Password</label>
-                <input type="password"
-                       name="password"
-                       id="loginPassword"
-                       placeholder="••••••••"
-                       required>
-                {% if form.password.errors %}
-                <small class="input-error">{{ form.password.errors.0 }}</small>
-                {% endif %}
-            </div>
-
-            <input type="hidden" name="next" value="{{ request.GET.next }}">
-
-            <button type="submit" class="auth-btn">Login</button>
-
-            <div class="or-divider"><span>OR</span></div>
-
-            <a href="#" class="google-btn">
-                <i class="fab fa-google"></i> Continue with Google
-            </a>
-
-            <p class="auth-switch">
-                Don’t have an account? <a href="{% url 'accounts:signup' %}">Create one</a>
-            </p>
-        </form>
-    </div>
-</section>
-
-<script src="{% static 'js/validation.js' %}"></script>
-</body>
-</html>
+        <button type="submit">Login</button>
+    </form>
+    <p>Don't have an account? <a href="{% url 'accounts:signup' %}">Create one</a></p>
+</div>
+{% endblock %}
