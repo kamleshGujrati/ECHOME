@@ -1,17 +1,12 @@
+
 services:
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: worker
-    image: echome-worker:latest
+    image: kgpro/echome:latest
     container_name: echome-worker
     env_file:
-      - ./deployment/.env
-
+      - ./.env
     volumes:
-      - ./deployment:/ECHOME/deployment
-
+      - ./:/app/deployment:ro
     command: celery -A ECHOME worker -l info
     restart: unless-stopped
     depends_on:
@@ -19,31 +14,34 @@ services:
         condition: service_healthy
 
   beat:
-    image: echome-worker:latest
+    image: kgpro/echome:latest
     container_name: echome-beat
     env_file:
-      - ./deployment/.env
+      - ./.env
+    volumes:
+      - ./:/app/deployment:ro
+      - beat_data:/var/lib/celery
     command: celery -A ECHOME beat -l info --schedule=/var/lib/celery/celerybeat-schedule
     restart: unless-stopped
     depends_on:
       redis:
         condition: service_healthy
-    volumes:
-      - beat_data:/var/lib/celery
-    
 
   redis:
     image: redis:7-alpine
     container_name: echome-redis
     env_file:
-      - ./deployment/.env
+      - ./redis.env
     command:
       - sh
       - -c
       - 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"'
     volumes:
       - redis_data:/data
-      - ./deployment:/ECHOME/deployment
+
+    ports:
+      - "6379:6379"
+
     restart: unless-stopped
     healthcheck:
       test:
@@ -52,7 +50,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
+      
 volumes:
   redis_data:
   beat_data:
+

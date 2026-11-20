@@ -50,3 +50,5 @@ dist/
 
 exports/
 tmp/
+
+deployment/  #keep deployment ignored as it contains sensitive files 
