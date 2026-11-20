@@ -16,7 +16,8 @@ ENV/
 # Environment files
 .env
 .env.*
-redis.env
+# Deployment Redis environment file
+deployment/redis.env
 
 # ============================
 # Django
