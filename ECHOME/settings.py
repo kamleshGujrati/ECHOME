@@ -18,8 +18,13 @@ import dj_database_url
 # -----------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env_path = BASE_DIR / ".env"
+
+
+env_path = BASE_DIR / "deployment" / ".env"
+
 load_dotenv(dotenv_path=env_path, override=True)
+
+load_dotenv(dotenv_path=BASE_DIR / "deployment" / "redis.env", override=True)  # Load environment variables from redis.env file
 
 # Django secret key
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-default-key")
