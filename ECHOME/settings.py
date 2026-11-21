@@ -238,23 +238,27 @@ X_FRAME_OPTIONS = "DENY"
 
 # Celery / Redis-----------------------------------------------------
 
+REDIS_USER=os.getenv("REDIS_USER","default")  # Optional: If your Redis server requires a username
+
 REDIS_HOST=os.getenv("REDIS_HOST","127.0.0.1")
 
 REDIS_PORT=os.getenv("REDIS_PORT","6379")
 
-REDIS_PASSWORD=os.getenv("REDIS_PASSWORD","") + "@"
+REDIS_PASSWORD=os.getenv("REDIS_PASSWORD","")
 
 
 
 CELERY_BROKER_URL = os.getenv(
     "CELERY_BROKER_URL",
-    f"redis://{REDIS_PASSWORD}{REDIS_HOST}:{REDIS_PORT}/0"
+    f"redis://{REDIS_USER}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
 )
 
 CELERY_RESULT_BACKEND = os.getenv(
     "CELERY_RESULT_BACKEND",
-    f"redis://{REDIS_PASSWORD}{REDIS_HOST}:{REDIS_PORT}/1"
+    f"redis://{REDIS_USER}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/1"
 )
+
+
 
 if CELERY_BROKER_URL.startswith("rediss://"):
     CELERY_BROKER_USE_SSL = {
